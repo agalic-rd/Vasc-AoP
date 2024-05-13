@@ -1,0 +1,39 @@
+packages:
+  ## ===[ Core ]=== ##
+  - renv
+  - here
+  - cli
+  - rlang
+  - yaml
+  - pipebind
+  - fs
+  - magrittr
+  
+  ## ===[ Data Ingestion ]=== ##
+  - openxlsx2
+  - janitor
+  
+  ## ===[ Data Wrangling ]=== ##
+  - tibble
+  - dplyr
+  - tidyr
+  - purrr
+  - stringr
+
+  ## ===[ Model Fitting ]=== ##
+  
+  ## ===[ Model Analysis ]=== ##
+  
+  ## ===[ Plots & Tables ]=== ##
+  - ggplot2
+  - ggtext
+  - patchwork
+  
+  ## ===[ Reporting ]=== ##
+  - knitr
+  
+  ## ===[ Misc ]=== ##
+  - gtools
+
+repos:
+  - CRAN: https://cloud.r-project.org/
