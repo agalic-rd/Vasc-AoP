@@ -18,7 +18,8 @@ read_vasc_raw <- function(path = configs$data$vasc_raw_data) {
   colnames(vasc_data) <- col_names
   
   return(
-    vasc_data |> 
-      pivot_longer(contains("__"), names_sep = "__", names_to = c(".value", "Bins"))
+    vasc_data
+    |> pivot_longer(contains("__"), names_sep = "__", names_to = c(".value", "Bins"))
+    |> janitor::clean_names()
   )
 }
