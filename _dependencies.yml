@@ -21,13 +21,31 @@ packages:
   - stringr
 
   ## ===[ Model Fitting ]=== ##
+  - car
+  - forecast
+  - glmmTMB@1.1.5
   
   ## ===[ Model Analysis ]=== ##
+  - broom
+  - emmeans
+  - insight
+  - performance
+  - qqplotr       # Required by performance
+  - parameters
+  - correlation
+  - psych         # For categorical correlations
+  - DHARMa
+  
   
   ## ===[ Plots & Tables ]=== ##
   - ggplot2
   - ggtext
+  - ggrepel
   - patchwork
+  - see
+  - ggdist
+  - bayesplot
+  - ggnewscale
   
   ## ===[ Reporting ]=== ##
   - knitr

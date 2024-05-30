@@ -1,11 +1,12 @@
-####╔═══════     ══════╗####
-####💠 Data Wrangling 💠####
-####╚═══════     ══════╝####
+####╔═════   ═════╗####
+####💠Loading Data💠####
+####╚═════   ═════╝####
 
 cli_h2("┗ [SCRIPTS] Loading data ingestion functions")
 
+## Loading and shaping Transparization data
 
-read_vasc_raw <- function(path = configs$data$vasc_raw_data) {
+load_vasc_data <- function(path = configs$data$vasc_raw_data) {
   
   col_names <- (
     openxlsx2::read_xlsx(path, rows = 1:2, col_names = FALSE, fill_merged_cells = TRUE)
@@ -23,3 +24,5 @@ read_vasc_raw <- function(path = configs$data$vasc_raw_data) {
     |> janitor::clean_names()
   )
 }
+
+

@@ -1,5 +1,5 @@
 ```{r}
-source("../../src/setup.R", echo = FALSE)
+source("../../src/setup.R", echo = TRUE)
 ```
 
 <!------------------------------------------------------------------------------>
@@ -10,10 +10,10 @@ source("../../src/setup.R", echo = FALSE)
 ```{r}
 (Vasc_data <- load_vasc_data())
 
-Vasc_responses <- c("Volume",	"Network Length",	"Surface Area",	"Branchpoints",	"Endpoints",	"Number of Segments",	"Segment Partitioning",	"Mean Segment Radius",	"Mean Segment Length",	"Mean Segment Tortuosity",	"Mean Segment Volume",	"Mean Segment Surface Area"
-)
+Vasc_responses <- c("Volume",	"Network Length",	"Surface Area",	"Branchpoints",	"Endpoints",	"Number of Segments",	"Segment Partitioning",	"Mean Segment Radius",	"Mean Segment Length",	"Mean Segment Tortuosity",	"Mean Segment Volume",	"Mean Segment Surface Area")
 
-Vasc_predictors <- c("Stage", "Level", "Mouse", "Cerebellar Area", "Cerebellar Volume")
+Vasc_predictors <- c("Condition", "Stage", "Level", "Mouse", "Cerebellar Area", "Cerebellar Volume")
+
 ```
 
 
@@ -27,6 +27,143 @@ Vasc_predictors <- c("Stage", "Level", "Mouse", "Cerebellar Area", "Cerebellar V
 ***
 
 **Gaussian:**
+
+```{r}
+Mod_Vol_Vasc_gauss <- glmmTMB(
+  volume ~ condition + (1 | mouse) + offset(log(cerebellar_volume)),
+  family = gaussian("log"),
+  data = Vasc_data,
+  REML = TRUE
+)
+
+cli_h1("[Parameters]")
+parameters(Mod_Vol_Vasc_gauss)
+cli_h1("[Fitness]")
+performance(Mod_Vol_Vasc_gauss)
+```
+
+**Gamma:**
+
+```{r}
+Mod_Vol_Vasc_gamma <- glmmTMB(
+  volume ~ condition + (1 | mouse) + offset(log(cerebellar_volume)),
+  family = Gamma("log"),
+  data = Vasc_data,
+  REML = TRUE
+)
+
+cli_h1("[Parameters]")
+parameters(Mod_Vol_Vasc_gamma)
+cli_h1("[Fitness]")
+performance(Mod_Vol_Vasc_gamma)
+```
+
+
+<!------------------------------------------------------------------------------>
+## 2. Model Diagnostics
+***
+
+**Model comparison:**
+
+```{r}
+compare_performance(Calb_P8_mod_Vol_PC_gauss, Calb_P8_mod_Vol_PC_gamma)
+```
+
+Best model:
+
+```{r}
+Calb_P8_mod_Vol_PC <- Calb_P8_mod_Vol_PC_gamma
+```
+
+
+### Residual diagnostics
+
+```{r fig.width = 10}
+check_model(Mod_Vol_Vasc_gamma)
+
+make_acf_plot(Mod_Vol_Vasc_gamma)
+```
+
+
+### Predictive checks
+
+```{r}
+Mod_Vol_Vasc_gamma_dharma <- DHARMa::simulateResiduals(Mod_Vol_Vasc_gamma, plot = FALSE, n = 300, seed = getOption("seed"))
+Mod_Vol_Vasc_gamma_dharma_t <- t(Mod_Vol_Vasc_gamma_dharma$simulatedResponse)
+```
+
+```{r fig.width = 10}
+ppc_plots(Calb_P8_mod_Vol_PC, simulations = Calb_P8_mod_Vol_PC_dharma_t, term = "Condition")
+```
+
+```{r fig.width = 10}
+ppc_stat_plots(Calb_P8_mod_Vol_PC, simulations = Calb_P8_mod_Vol_PC_dharma_t, term = "Condition")
+```
+
+### Potential outliers
+
+```{r}
+get_model_based_outliers(Calb_P8_data$clean, Calb_P8_mod_Vol_PC, Calb_P8_mod_Vol_PC_dharma, Calb_P8_responses)
+```
+
+
+<!------------------------------------------------------------------------------>
+## 3. Model Analysis
+***
+
+### Model parameters
+
+**All effects (Wald):**
+
+```{r}
+parameters(
+  Mod_Vol_Vasc_gamma, exponentiate = should_exp(Mod_Vol_Vasc_gamma),
+  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+)
+```
+
+**Main effects (Wald):**
+
+```{r}
+car::Anova(Mod_Vol_Vasc_gamma, type = 3)
+```
+
+
+### Marginal means
+
+```{r}
+cli_h1("[Observed]")
+
+distribution_summary(get_data(Mod_Vol_Vasc_gamma), dvs = find_response(Mod_Vol_Vasc_gamma), between = "Condition")
+
+cli_h1("[Emmeans]")
+
+emmeans(Mod_Vol_Vasc_gamma, specs = "Condition", type = "response")
+```
+
+
+### Contrasts
+
+```{r}
+cli_h1("[Link scale]")
+
+emmeans(Calb_P8_mod_Vol_PC, specs = "Condition", type = "response") |> 
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+
+cli_h1("[Response scale]")
+
+emmeans(Calb_P8_mod_Vol_PC, specs = "Condition", regrid = "response") |>
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+```
+
+
+Plot:
+
+```{r fig.width = 4, fig.height = 7}
+make_signif_boxplot(Mod_Vol_Vasc, xaxis = "Condition", subtitle = unique(Vasc_data$Stage))
+```
+
+
 
 <!------------------------------------------------------------------------------>
 <!------------------------------------------------------------------------------>
