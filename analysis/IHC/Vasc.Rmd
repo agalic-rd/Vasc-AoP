@@ -1,5 +1,5 @@
 ```{r}
-source("../../src/setup.R", echo = TRUE)
+source("../../src/setup.R", echo = FALSE)
 ```
 
 <!------------------------------------------------------------------------------>
@@ -8,12 +8,31 @@ source("../../src/setup.R", echo = TRUE)
 ***
 
 ```{r}
-(Vasc_data <- load_vasc_data())
+(vasc <- load_vasc_data())
 
-Vasc_responses <- c("Volume",	"Network Length",	"Surface Area",	"Branchpoints",	"Endpoints",	"Number of Segments",	"Segment Partitioning",	"Mean Segment Radius",	"Mean Segment Length",	"Mean Segment Tortuosity",	"Mean Segment Volume",	"Mean Segment Surface Area")
+vasc_responses <- c(
+  "volume",
+  "network_length",
+  "surface_area",
+  "branchpoints",
+  "endpoints",
+  "number_of_segments",
+  "segment_partitioning",
+  "mean_segment_radius",
+  "mean_segment_length",
+  "mean_segment_tortuosity",
+  "mean_segment_volume",
+  "mean_segment_surface_area"
+)
 
-Vasc_predictors <- c("Condition", "Stage", "Level", "Mouse", "Cerebellar Area", "Cerebellar Volume")
-
+vasc_predictors <- c(
+  "condition",
+  "stage",
+  "level",
+  "mouse",
+  "cerebellar_area",
+  "cerebellar_volume"
+)
 ```
 
 
@@ -29,33 +48,37 @@ Vasc_predictors <- c("Condition", "Stage", "Level", "Mouse", "Cerebellar Area", 
 **Gaussian:**
 
 ```{r}
-Mod_Vol_Vasc_gauss <- glmmTMB(
-  volume ~ condition + (1 | mouse) + offset(log(cerebellar_volume)),
+# test <- vasc$data$normal |> 
+#   mutate(volume = volume / 1e6, cerebellar_volume = cerebellar_volume / 1e6) |> 
+#   mutate(mouse = factor(mouse), condition = factor(condition, levels = c("N", "IH")))
+
+mod_vol_vasc_gauss <- glmmTMB(
+  volume ~ condition + offset(log(cerebellar_volume)) + (1 | mouse),
   family = gaussian("log"),
-  data = Vasc_data,
+  data = vasc$data$normal,
   REML = TRUE
 )
 
 cli_h1("[Parameters]")
-parameters(Mod_Vol_Vasc_gauss)
+parameters(mod_vol_vasc_gauss)
 cli_h1("[Fitness]")
-performance(Mod_Vol_Vasc_gauss)
+performance(mod_vol_vasc_gauss)
 ```
 
 **Gamma:**
 
 ```{r}
-Mod_Vol_Vasc_gamma <- glmmTMB(
-  volume ~ condition + (1 | mouse) + offset(log(cerebellar_volume)),
+mod_vol_vasc_gamma <- glmmTMB(
+  volume ~ condition + offset(log(cerebellar_volume)) + (1 | mouse),
   family = Gamma("log"),
-  data = Vasc_data,
+  data = vasc$data$normal,
   REML = TRUE
 )
 
 cli_h1("[Parameters]")
-parameters(Mod_Vol_Vasc_gamma)
+parameters(mod_vol_vasc_gamma)
 cli_h1("[Fitness]")
-performance(Mod_Vol_Vasc_gamma)
+performance(mod_vol_vasc_gamma)
 ```
 
 

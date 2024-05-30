@@ -23,7 +23,7 @@ packages:
   ## ===[ Model Fitting ]=== ##
   - car
   - forecast
-  - glmmTMB@1.1.5
+  - glmmTMB
   
   ## ===[ Model Analysis ]=== ##
   - broom

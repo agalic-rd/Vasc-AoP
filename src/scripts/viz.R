@@ -42,11 +42,15 @@ make_signif_boxplot <- function(
   ## Making sure the variables of interest are contrasts for emmeans
   dat <- dat |> mutate(across(c(any_of(c(xaxis, facet)) & where(\(c) !is.factor(c))), as.factor))
   
-  extra_dat <- dat |> group_by(across(any_of(c(xaxis, facet)))) |> summarize(N = str_glue("N = {get_n_units(pick(everything()))}")) |> ungroup()
+  extra_dat <- dat |> 
+    group_by(across(any_of(c(xaxis, facet)))) |> 
+    summarize(N = str_glue("N = {get_n_units(pick(everything()))}")) |> 
+    ungroup()
   
   max <- max(dat[[resp]])
   min <- min(dat[[resp]])
   amp <- abs(max - min)
   
-  if(adjust == "none") correction <- "(uncorrected)"
+  if (adjust == "none") correction <- "(uncorrected)"
   else correction <- str_glue("({adjust} corrected)")
+}

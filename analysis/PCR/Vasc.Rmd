@@ -8,6 +8,6 @@ source("../../src/setup.R", echo = FALSE)
 ***
 
 ```{r}
-vasc_data_raw <- read_vasc_raw()
+vasc_data_raw <- load_vasc_data()
 ```
 
