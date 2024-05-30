@@ -1,2 +1,3 @@
 data:
+  data_dict: !expr here::here("data", "__data_dictionary.xlsx")
   vasc_raw_data: !expr here::here("data", "Vasc_raw_data.xlsx")

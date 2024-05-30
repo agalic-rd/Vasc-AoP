@@ -10,29 +10,8 @@ source("../../src/setup.R", echo = FALSE)
 ```{r}
 (vasc <- load_vasc_data())
 
-vasc_responses <- c(
-  "volume",
-  "network_length",
-  "surface_area",
-  "branchpoints",
-  "endpoints",
-  "number_of_segments",
-  "segment_partitioning",
-  "mean_segment_radius",
-  "mean_segment_length",
-  "mean_segment_tortuosity",
-  "mean_segment_volume",
-  "mean_segment_surface_area"
-)
-
-vasc_predictors <- c(
-  "condition",
-  "stage",
-  "level",
-  "mouse",
-  "cerebellar_area",
-  "cerebellar_volume"
-)
+vasc_P4 <- list(data = purrr::modify_tree(vasc$data, leaf = \(x) filter(x, stage == "P4")))
+vasc_P8 <- list(data = purrr::modify_tree(vasc$data, leaf = \(x) filter(x, stage == "P8")))
 ```
 
 
@@ -48,14 +27,14 @@ vasc_predictors <- c(
 **Gaussian:**
 
 ```{r}
-# test <- vasc$data$normal |> 
-#   mutate(volume = volume / 1e6, cerebellar_volume = cerebellar_volume / 1e6) |> 
-#   mutate(mouse = factor(mouse), condition = factor(condition, levels = c("N", "IH")))
+vasc_data_normal_small <- vasc_P4$data$normal |>
+  mutate(volume = volume / 1e6, cerebellar_volume = cerebellar_volume / 1e6) |>
+  mutate(mouse = factor(mouse), condition = factor(condition, levels = c("N", "IH")))
 
 mod_vol_vasc_gauss <- glmmTMB(
-  volume ~ condition + offset(log(cerebellar_volume)) + (1 | mouse),
+  volume ~ condition * level + offset(log(cerebellar_volume)) + (1 | mouse),
   family = gaussian("log"),
-  data = vasc$data$normal,
+  data = vasc_data_normal_small |> filter(level == "Superf"),
   REML = TRUE
 )
 
@@ -69,9 +48,9 @@ performance(mod_vol_vasc_gauss)
 
 ```{r}
 mod_vol_vasc_gamma <- glmmTMB(
-  volume ~ condition + offset(log(cerebellar_volume)) + (1 | mouse),
+  volume ~ condition * level + offset(log(cerebellar_volume)) + (1 | mouse),
   family = Gamma("log"),
-  data = vasc$data$normal,
+  data = vasc_P4$data$normal,
   REML = TRUE
 )
 
@@ -82,52 +61,35 @@ performance(mod_vol_vasc_gamma)
 ```
 
 
+
 <!------------------------------------------------------------------------------>
 ## 2. Model Diagnostics
 ***
 
-**Model comparison:**
-
-```{r}
-compare_performance(Calb_P8_mod_Vol_PC_gauss, Calb_P8_mod_Vol_PC_gamma)
-```
-
-Best model:
-
-```{r}
-Calb_P8_mod_Vol_PC <- Calb_P8_mod_Vol_PC_gamma
-```
-
-
 ### Residual diagnostics
 
 ```{r fig.width = 10}
-check_model(Mod_Vol_Vasc_gamma)
+check_model(mod_vol_vasc_gamma)
 
-make_acf_plot(Mod_Vol_Vasc_gamma)
+make_acf_plot(mod_vol_vasc_gamma)
 ```
 
 
 ### Predictive checks
 
 ```{r}
-Mod_Vol_Vasc_gamma_dharma <- DHARMa::simulateResiduals(Mod_Vol_Vasc_gamma, plot = FALSE, n = 300, seed = getOption("seed"))
-Mod_Vol_Vasc_gamma_dharma_t <- t(Mod_Vol_Vasc_gamma_dharma$simulatedResponse)
+mod_vol_vasc_gamma_dharma <- DHARMa::simulateResiduals(mod_vol_vasc_gamma, plot = FALSE, n = 300, seed = getOption("seed"))
+mod_vol_vasc_gamma_dharma_t <- t(mod_vol_vasc_gamma_dharma$simulatedResponse)
 ```
 
 ```{r fig.width = 10}
-ppc_plots(Calb_P8_mod_Vol_PC, simulations = Calb_P8_mod_Vol_PC_dharma_t, term = "Condition")
+ppc_plots(mod_vol_vasc_gamma, simulations = mod_vol_vasc_gamma_dharma_t, term = "Condition")
 ```
 
 ```{r fig.width = 10}
 ppc_stat_plots(Calb_P8_mod_Vol_PC, simulations = Calb_P8_mod_Vol_PC_dharma_t, term = "Condition")
 ```
 
-### Potential outliers
-
-```{r}
-get_model_based_outliers(Calb_P8_data$clean, Calb_P8_mod_Vol_PC, Calb_P8_mod_Vol_PC_dharma, Calb_P8_responses)
-```
 
 
 <!------------------------------------------------------------------------------>
@@ -140,7 +102,7 @@ get_model_based_outliers(Calb_P8_data$clean, Calb_P8_mod_Vol_PC, Calb_P8_mod_Vol
 
 ```{r}
 parameters(
-  Mod_Vol_Vasc_gamma, exponentiate = should_exp(Mod_Vol_Vasc_gamma),
+  mod_vol_vasc_gamma, exponentiate = should_exp(mod_vol_vasc_gamma),
   ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
@@ -148,7 +110,7 @@ parameters(
 **Main effects (Wald):**
 
 ```{r}
-car::Anova(Mod_Vol_Vasc_gamma, type = 3)
+car::Anova(mod_vol_vasc_gamma, type = 3)
 ```
 
 
@@ -157,11 +119,11 @@ car::Anova(Mod_Vol_Vasc_gamma, type = 3)
 ```{r}
 cli_h1("[Observed]")
 
-distribution_summary(get_data(Mod_Vol_Vasc_gamma), dvs = find_response(Mod_Vol_Vasc_gamma), between = "Condition")
+distribution_summary(get_data(mod_vol_vasc_gamma), dvs = find_response(mod_vol_vasc_gamma), between = "Condition")
 
 cli_h1("[Emmeans]")
 
-emmeans(Mod_Vol_Vasc_gamma, specs = "Condition", type = "response")
+emmeans(mod_vol_vasc_gamma, specs = "Condition", type = "response")
 ```
 
 
@@ -182,10 +144,15 @@ emmeans(Calb_P8_mod_Vol_PC, specs = "Condition", regrid = "response") |>
 
 Plot:
 
-```{r fig.width = 4, fig.height = 7}
-make_signif_boxplot(Mod_Vol_Vasc, xaxis = "Condition", subtitle = unique(Vasc_data$Stage))
+```{r fig.width = 6, fig.height = 5}
+make_signif_boxplot(mod_vol_vasc_gamma, xaxis = "condition", subtitle = "P4") |>
+  save_png("mod_vol_vasc_gamma_P4")
 ```
 
+```{r fig.width = 6, fig.height = 5}
+make_signif_boxplot_inter(mod_vol_vasc_gamma, pred1 = "condition", pred2 = "level") |> 
+  save_png("mod_vol_vasc_gamma_inter_P4")
+```
 
 
 <!------------------------------------------------------------------------------>
