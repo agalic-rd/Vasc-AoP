@@ -18,6 +18,17 @@ load_vasc_data <- function(path = configs$data$vasc_raw_data) {
   
   colnames(vasc_data) <- col_names
   
+  ## Adding totals (all depths)
+  vasc_data <- (
+    bind_rows(
+      vasc_data,
+      vasc_data |> 
+        summarize(across(where(is.numeric), sum), .by = c(Stage, Mouse, Condition)) |> 
+        mutate(Level = "Total")
+    )
+    |> arrange(Stage, Condition, Level, Mouse)
+  )
+  
   # Binned variables
   vasc_binned_data <- vasc_data |> 
     select(Level, Stage, Mouse, Condition, contains("__")) |> 
@@ -35,9 +46,22 @@ load_vasc_data <- function(path = configs$data$vasc_raw_data) {
   )
   
   # Unbinned variables
-  vasc_data <- vasc_data |> 
-    select(-contains("__")) |> 
+  vasc_data <- vasc_data |>
+    select(-contains("__")) |>
     janitor::clean_names()
+  
+  # Data checks (TODO: move to their own function)
+  cerebellar_values_not_equal <- vasc_data |> 
+    filter(level != "Total") |> 
+    pivot_wider(names_from = level, values_from = -c(level, stage, condition, mouse)) |> 
+    filter(
+      cerebellar_volume_Deep != cerebellar_volume_Superficial 
+      | cerebellar_area_Deep != cerebellar_area_Superficial, 
+      .by = stage
+    ) |> 
+    select(stage, mouse, condition, starts_with("cerebellar_volume"), starts_with("cerebellar_area"))
+  
+  if (nrow(cerebellar_values_not_equal) > 0) cli::cli_alert_warning("Cerebellar values are not equal for some mice")
   
   return(list(data = list(normal = vasc_data, binned = vasc_binned_data)))
 }

@@ -15,7 +15,7 @@ vasc_P8 <- list(data = purrr::modify_tree(vasc$data, leaf = \(x) filter(x, stage
 ```
 
 ```{r}
-apply_model <- function(data, resp_name, family = "Gamma") { # nbinom2("log")
+apply_model <- function(data, resp_name, family = "Gamma") {
   
   form <- stringr::str_glue("{resp_name} ~ condition * level + offset(log(cerebellar_volume)) + (1 | mouse)")
   
@@ -32,11 +32,18 @@ apply_model <- function(data, resp_name, family = "Gamma") { # nbinom2("log")
   return(list(mod_gamma$result))
 }
 
-make_mod_params_plots <- function(vars, family) {
+make_mod_params_plots <- function(data, vars, family, total_only = FALSE) {
+  
+  if (total_only) {
+    data <- data |> filter(level == "Total")
+  } else {
+    data <- data |> filter(level != "Total")
+  }
+  
   purrr::map(
     vars,
     \(var) {
-      models <- vasc$data$normal |> 
+      models <- data |> 
         select(level, stage, condition, mouse, cerebellar_volume, any_of(var)) |>
         group_split(stage) |> 
         purrr::map_dfr(\(dat) dat |> 
@@ -55,13 +62,13 @@ make_mod_params_plots <- function(vars, family) {
       purrr::pwalk(
         models,
         \(var_name, stage, mod) make_signif_boxplot(mod, xaxis = "condition", subtitle = stage) |>
-          save_png(stringr::str_glue("mod_{var_name}_vasc_{family}_{stage}"), display = FALSE)
+          save_png(stringr::str_glue("mod_{var_name}_vasc_{family}_{stage}{if (total_only) '_total'}"), display = FALSE)
       )
       
       purrr::pwalk(
         models,
         \(var_name, stage, mod) make_signif_boxplot_inter(mod, pred1 = "condition", pred2 = "level") |>
-          save_png(stringr::str_glue("mod_{var_name}_vasc_{family}_inter_{stage}"), display = FALSE)
+          save_png(stringr::str_glue("mod_{var_name}_vasc_{family}_inter_{stage}{if (total_only) '_total'}"), display = FALSE)
       )
       
       return(list(models = models, params = params, perfs = perfs))
@@ -73,8 +80,11 @@ gamma_resps <- c("volume", "network_length", "surface_area", "segment_partitioni
 
 negbin_resps <- c("branchpoints", "endpoints", "number_of_segments")
 
-gamma_mods <- make_mod_params_plots(gamma_resps, "Gamma")
-nbinom_mods <- make_mod_params_plots(negbin_resps, "nbinom2")
+gamma_mods <- make_mod_params_plots(vasc$data$normal, gamma_resps, "Gamma")
+nbinom_mods <- make_mod_params_plots(vasc$data$normal, negbin_resps, "nbinom2")
+
+gamma_mods_total <- make_mod_params_plots(vasc$data$normal, gamma_resps, "Gamma", total_only = TRUE)
+nbinom_mods_total <- make_mod_params_plots(vasc$data$normal, negbin_resps, "nbinom2", total_only = TRUE)
 ```
 
 

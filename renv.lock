@@ -42,14 +42,8 @@
     },
     "KernSmooth": {
       "Package": "KernSmooth",
-      "Version": "2.23-22",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "stats"
-      ],
-      "Hash": "2fecebc3047322fa5930f74fae5de70f"
+      "Version": "2.23-24",
+      "Source": "Repository"
     },
     "MASS": {
       "Package": "MASS",
@@ -129,7 +123,7 @@
     },
     "RcppArmadillo": {
       "Package": "RcppArmadillo",
-      "Version": "0.12.8.3.0",
+      "Version": "0.12.8.4.0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -139,7 +133,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "1eb4a0603478b5557b77d75534251371"
+      "Hash": "a535dd90aa8ec9a2e63a8f79b4a1bf43"
     },
     "RcppEigen": {
       "Package": "RcppEigen",
@@ -170,7 +164,7 @@
     },
     "SparseM": {
       "Package": "SparseM",
-      "Version": "1.82",
+      "Version": "1.83",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -180,7 +174,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "d9654aa07d133ba02190ad518a653931"
+      "Hash": "f2b9f6a10ac6bc136be10c508ee890f9"
     },
     "TMB": {
       "Package": "TMB",
@@ -487,16 +481,7 @@
     "cluster": {
       "Package": "cluster",
       "Version": "2.1.6",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "grDevices",
-        "graphics",
-        "stats",
-        "utils"
-      ],
-      "Hash": "0aaa05204035dc43ea0004b9c76611dd"
+      "Source": "Repository"
     },
     "codetools": {
       "Package": "codetools",
@@ -842,15 +827,7 @@
     "foreign": {
       "Package": "foreign",
       "Version": "0.8-86",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "methods",
-        "stats",
-        "utils"
-      ],
-      "Hash": "550170303dbb19d07b2bcc288068e7dc"
+      "Source": "Repository"
     },
     "fracdiff": {
       "Package": "fracdiff",
@@ -1015,9 +992,15 @@
     },
     "glmmTMB": {
       "Package": "glmmTMB",
-      "Version": "1.1.9",
-      "Source": "Repository",
-      "Repository": "CRAN",
+      "Version": "1.1.9-9000",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "glmmTMB",
+      "RemoteRepo": "glmmTMB",
+      "RemoteSubdir": "glmmTMB",
+      "RemoteRef": "master",
+      "RemoteSha": "e3eb13e3d4370005234bd66958f5b1c12c324eca",
       "Requirements": [
         "Matrix",
         "R",
@@ -1027,9 +1010,10 @@
         "methods",
         "mgcv",
         "nlme",
-        "numDeriv"
+        "numDeriv",
+        "reformulas"
       ],
-      "Hash": "1d08bfb9b7130b67a81e4783a49da757"
+      "Hash": "c537616faa21c4aaf48e765981234e05"
     },
     "glue": {
       "Package": "glue",
@@ -1350,9 +1334,14 @@
     },
     "lme4": {
       "Package": "lme4",
-      "Version": "1.1-35.3",
-      "Source": "Repository",
-      "Repository": "CRAN",
+      "Version": "1.1-35.9000",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "lme4",
+      "RemoteRepo": "lme4",
+      "RemoteRef": "master",
+      "RemoteSha": "5d45a2f7d90482cf42066d6288b1104577018358",
       "Requirements": [
         "MASS",
         "Matrix",
@@ -1372,7 +1361,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "862f9d995f528f3051f524791955b20c"
+      "Hash": "a10b060de349144a36fbdc56e747678c"
     },
     "lmtest": {
       "Package": "lmtest",
@@ -2053,6 +2042,19 @@
       ],
       "Hash": "8c06968e0a5b0209c5f34239b1302336"
     },
+    "reformulas": {
+      "Package": "reformulas",
+      "Version": "0.2.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "Matrix",
+        "Rdpack",
+        "methods",
+        "stats"
+      ],
+      "Hash": "d15dba4f2d7fb7e708e37b9411fa923f"
+    },
     "rematch2": {
       "Package": "rematch2",
       "Version": "2.1.2",
@@ -2138,15 +2140,7 @@
     "rpart": {
       "Package": "rpart",
       "Version": "4.1.23",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "grDevices",
-        "graphics",
-        "stats"
-      ],
-      "Hash": "b3d390424f41d04174cccf84d49676c2"
+      "Source": "Repository"
     },
     "rprojroot": {
       "Package": "rprojroot",
@@ -2314,7 +2308,7 @@
     },
     "survival": {
       "Package": "survival",
-      "Version": "3.5-8",
+      "Version": "3.6-4",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -2326,7 +2320,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "184d7799bca4ba8c3be72ea396f4b9a3"
+      "Hash": "e6e3071f471513e4b85f98ca041303c7"
     },
     "sys": {
       "Package": "sys",
