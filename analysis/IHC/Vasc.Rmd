@@ -91,7 +91,7 @@ negbin_resps <- c("branchpoints", "endpoints", "number_of_segments")
 gamma_mods <- make_mod_params_plots(vasc$data$normal, gamma_resps, "Gamma")
 nbinom_mods <- make_mod_params_plots(vasc$data$normal, negbin_resps, "nbinom2")
 
-gamma_mods_total <- make_mod_params_plots(vasc$data$normal, gamma_resps, "Gamma", total_only = TRUE)
+gamma_mods_total <- make_mod_params_plots(vasc$data$normal, gamma_resps[2:length(gamma_resps)], "Gamma", total_only = TRUE)
 nbinom_mods_total <- make_mod_params_plots(vasc$data$normal, negbin_resps, "nbinom2", total_only = TRUE)
 ```
 
