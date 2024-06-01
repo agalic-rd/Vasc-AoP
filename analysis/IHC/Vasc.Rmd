@@ -15,16 +15,22 @@ vasc_P8 <- list(data = purrr::modify_tree(vasc$data, leaf = \(x) filter(x, stage
 ```
 
 ```{r}
-apply_model <- function(data, resp_name, family = "Gamma") {
+vasc_model <- function(data, resp_name, family = "Gamma") {
   
   form <- stringr::str_glue("{resp_name} ~ condition * level + offset(log(cerebellar_volume)) + (1 | mouse)")
+  start_values <- list(beta = c(log(mean(data[[resp_name]])), rep(0, 3)))
+  
+  if (length(unique(data$level)) == 1) {
+    form <- stringr::str_glue("{resp_name} ~ condition + offset(log(cerebellar_volume)) + (1 | mouse)")
+    start_values <- list(beta = c(log(mean(data[[resp_name]])), rep(0, 1)))
+  }
   
   mod_gamma <- purrr:::capture_output(
     glmmTMB(
       as.formula(form),
       family = list(family = family, link = "log"),
       data = data,
-      start = list(beta = c(log(mean(data[[resp_name]])), rep(0, 3))),
+      start = start_values,
       REML = TRUE
     )
   )
@@ -47,7 +53,7 @@ make_mod_params_plots <- function(data, vars, family, total_only = FALSE) {
         select(level, stage, condition, mouse, cerebellar_volume, any_of(var)) |>
         group_split(stage) |> 
         purrr::map_dfr(\(dat) dat |> 
-            summarize(stage = first(stage), mod = apply_model(pick(everything()), var, family), var_name = var) |> 
+            summarize(stage = first(stage), mod = vasc_model(pick(everything()), var, family), var_name = var) |> 
             select(-any_of(var))
         )
       
@@ -65,11 +71,13 @@ make_mod_params_plots <- function(data, vars, family, total_only = FALSE) {
           save_png(stringr::str_glue("mod_{var_name}_vasc_{family}_{stage}{if (total_only) '_total'}"), display = FALSE)
       )
       
-      purrr::pwalk(
-        models,
-        \(var_name, stage, mod) make_signif_boxplot_inter(mod, pred1 = "condition", pred2 = "level") |>
-          save_png(stringr::str_glue("mod_{var_name}_vasc_{family}_inter_{stage}{if (total_only) '_total'}"), display = FALSE)
-      )
+      if (!total_only) {
+        purrr::pwalk(
+          models,
+          \(var_name, stage, mod) make_signif_boxplot_inter(mod, pred1 = "condition", pred2 = "level") |>
+            save_png(stringr::str_glue("mod_{var_name}_vasc_{family}_inter_{stage}{if (total_only) '_total'}"), display = FALSE)
+        )
+      }
       
       return(list(models = models, params = params, perfs = perfs))
     }
