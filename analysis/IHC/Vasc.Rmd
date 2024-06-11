@@ -68,14 +68,14 @@ make_mod_params_plots <- function(data, vars, family, total_only = FALSE) {
       purrr::pwalk(
         models,
         \(var_name, stage, mod) make_signif_boxplot(mod, xaxis = "condition", subtitle = stage) |>
-          save_png(stringr::str_glue("mod_{var_name}_vasc_{family}_{stage}{if (total_only) '_total'}"), display = FALSE)
+          save_png(stringr::str_glue("mod_{var_name}_vasc_{family}_{stage}{if (total_only) '_total' else ''}"), display = FALSE)
       )
       
       if (!total_only) {
         purrr::pwalk(
           models,
           \(var_name, stage, mod) make_signif_boxplot_inter(mod, pred1 = "condition", pred2 = "level") |>
-            save_png(stringr::str_glue("mod_{var_name}_vasc_{family}_inter_{stage}{if (total_only) '_total'}"), display = FALSE)
+            save_png(stringr::str_glue("mod_{var_name}_vasc_{family}_inter_{stage}"), display = FALSE)
         )
       }
       

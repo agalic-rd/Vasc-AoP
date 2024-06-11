@@ -21,7 +21,7 @@ strip_color <- "#adb5bd"
 color_text <- "black"
 color_text_bi <- "#a8aeb4"
 
-colors_cond <- c("#02ccae", "#9965db")   # Condition: N, IH
+colors_cond <- c("#cf4040", "#4053cf")   # Condition: N, IH
 colors_fold <- c("#f02b00", "#01944b")   # Expression: Downregulated, Upregulated
 colors_effect <- c("#b625bb", "#0264cc") # Effect: Bad, Good
 
