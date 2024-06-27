@@ -26,6 +26,7 @@ load_vasc_data <- function(path = configs$data$vasc_raw_data) {
         summarize(across(where(is.numeric), sum), .by = c(Stage, Mouse, Condition)) |> 
         mutate(Level = "Total")
     )
+    |> filter(Mouse != "KA4N") # TEMP
     |> arrange(Stage, Condition, Level, Mouse)
   )
   
