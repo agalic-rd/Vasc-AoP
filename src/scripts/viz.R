@@ -104,7 +104,7 @@ make_signif_boxplot <- function(
       aes(group = .data[[cluster]], fill = .data[[xaxis]]), geom = "point", fun = mean, 
       size = ifelse(is.null(facet), 4, 3), shape = 23, color = color_text, alpha = 0.9, position = position_dodge(0.2)
     )}
-    + ggrepel::geom_text_repel(aes(label = mouse), color = "black")
+    #+ ggrepel::geom_text_repel(aes(label = mouse), color = "black")
     + geom_errorbarh(
       data = p_data_contrasts, aes(xmin = x1, xmax = x2, y = pos.y), inherit.aes = FALSE, 
       color = "black", height = 0.03 * amp, linewidth = 0.5
@@ -238,7 +238,7 @@ make_signif_boxplot_inter <- function(
         size = 3, shape = 23, color = color_text, alpha = 0.9, position = position_dodge(0.2)
       )
     }
-    + ggrepel::geom_text_repel(aes(label = mouse), color = "black")
+    #+ ggrepel::geom_text_repel(aes(label = mouse), color = "black")
     + geom_errorbarh(
       data = p_data_contrasts, aes(xmin = paste(X1, .data[[pred2]], sep = "_"), xmax = paste(X2, .data[[pred2]], sep = "_"), y = pos.y), inherit.aes = FALSE,
       color = "black", height = 0.02 * amp, size = 0.5
