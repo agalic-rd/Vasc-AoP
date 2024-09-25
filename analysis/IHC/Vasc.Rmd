@@ -13,6 +13,7 @@ source("../../src/setup.R", echo = FALSE)
 vasc_P4 <- list(data = purrr::modify_tree(vasc$data, leaf = \(x) filter(x, stage == "P4")))
 vasc_P8 <- list(data = purrr::modify_tree(vasc$data, leaf = \(x) filter(x, stage == "P8")))
 vasc_P12 <- list(data = purrr::modify_tree(vasc$data, leaf = \(x) filter(x, stage == "P12")))
+vasc_P21 <- list(data = purrr::modify_tree(vasc$data, leaf = \(x) filter(x, stage == "P21")))
 ```
 
 ```{r}
