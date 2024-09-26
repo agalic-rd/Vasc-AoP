@@ -1,5 +1,5 @@
 ```{r}
-source("../../src/setup.R", echo = FALSE)
+source(here::here("src", "setup.R"), echo = FALSE)
 ```
 
 <!---------------------------------------------------------->
@@ -8,6 +8,98 @@ source("../../src/setup.R", echo = FALSE)
 ***
 
 ```{r}
-vasc_data_raw <- load_vasc_data()
+(supplementary_data <- load_supplementary_data())
 ```
 
+```{r}
+(vasc_data <- load_pcr_data(target = "vasc", reprocess = TRUE))
+```
+
+<!---------------------------------------------------------->
+<!---------------------------------------------------------->
+# II. Model fitting
+***
+
+Let's define the model we will fit to each `Gene`'s `DCq` data. 
+
+Here, we will fit a simple Linear Model, which is largely similar to running a t-test between both conditions:
+
+```{r}
+ND_model <- function(data) {
+  glmmTMB(dcq ~ condition, family = gaussian("identity"), data = data, contrasts = list(condition = "contr.sum"))
+}
+```
+
+Now, let's fit said model to each `Gene`'s data, for a given `Stage` and `Layer`:
+
+```{r}
+compute_fold_change <- function(mod) {
+  return(
+    get_data(mod)
+    |> select(condition, dcq)
+    |> pivot_wider(names_from = condition, values_from = dcq, values_fn = mean)
+    |> summarize(fold = 2**(-1 * (IH - N)))
+    |> pull(fold)
+  )
+}
+```
+
+```{r}
+(vasc_data$models <- vasc_data$clean
+  |> group_split(stage, gene)
+  |> map_dfr(
+    \(d) summarize(d, mod = pick(condition, dcq) |> ND_model() |> list(), .by = c(stage, gene)), 
+    .progress = "Fitting models:"
+  )
+  |> filter(!has_na_coefs(mod)) # Removing models that did not fit properly
+  |> mutate(fold = map_dbl(mod, compute_fold_change)) # Adding the Fold change
+  |> select(stage, gene, fold, mod)
+)
+```
+
+<!---------------------------------------------------------->
+<!---------------------------------------------------------->
+# III. Model analysis
+***
+
+## Predictions
+
+For each model we fit, we can then extract the CI and p.value for the relevant contrasts, and use those to establish if a `Gene` was up or down-regulated:
+
+```{r}
+get_emmeans_data <- function(mod) {
+  return(
+    emmeans(mod, specs = "condition", type = "response")
+    |> contrast(method = "pairwise", adjust = "none", infer = TRUE)
+    |> as.data.frame()
+    |> pivot_wider(names_from = contrast, values_from = estimate)
+    |> select(last_col(), LCB = lower.CL, UCB = upper.CL, p.value)
+    |> mutate(across(where(is.character), \(x) na_if(x, "NaN")))
+  )
+}
+```
+
+```{r}
+(vasc_data$predictions <- vasc_data$models
+  |> group_split(stage, gene)
+  |> map_dfr(\(d) mutate(d, get_emmeans_data(mod[[1]])), .progress = "Extracting model predictions:")
+  |> filter(!is.na(p.value))
+  |> mutate(expression = get_regulation_type(fold, p.value))
+  |> select(stage, gene, fold, expression, matches("-|/"), LCB, UCB, p.value)
+)
+```
+
+## Gene regulation timeline
+
+To get a better idea of how each `Gene`'s regulation changes through time, we can plot a timeline of their expression, split by `Layer` and `Pathway`.
+
+```{r fig.width = 12, fig.height = 8}
+(
+  vasc_data$predictions 
+  |> left_join(supplementary_data$gene_data$vasc, join_by(gene))
+  |> filter(p.value <= .05)
+  |> select(stage, gene, fold, p.value, expression, pathway, effect)
+  |> make_fold_timeline_plot(facet_rows = "pathway", color_by = "effect", size_boost = 1.5)
+  |> save_png("vasc_timeline", subfolder = "PCR")
+)
+```

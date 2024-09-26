@@ -10,6 +10,7 @@ packages:
   - magrittr
   
   ## ===[ Data Ingestion ]=== ##
+  - readxl
   - openxlsx2
   - janitor
   
@@ -24,7 +25,7 @@ packages:
   - car
   - forecast
   - lme4/lme4
-  - glmmTMB/glmmTMB/glmmTMB
+  - glmmTMB@1.1.5
   
   ## ===[ Model Analysis ]=== ##
   - broom

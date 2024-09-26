@@ -272,3 +272,63 @@ make_signif_boxplot_inter <- function(
   
   return(plot)
 }
+
+#------------------#
+####🔺Timelines ####
+#------------------#
+
+make_fold_timeline_plot <- function(
+    dat, facet_rows = "Pathway", trans = "identity", 
+    color_by = NULL, colors = colors_effect, size_boost = 1
+) {
+  
+  origin <- do.call(trans, list(1))
+  
+  dat <- (
+    dat
+    |> mutate(fold_trans = do.call(trans, list(fold)))
+    |> mutate(fold_amp = ifelse(
+      max(fold_trans, na.rm = TRUE) - min(fold_trans, na.rm = TRUE) != 0, 
+      max(fold_trans, na.rm = TRUE) - min(fold_trans, na.rm = TRUE), 
+      mean(fold_trans, na.rm = TRUE)) * 0.1,
+      .by = all_of(c(facet_rows, "stage"))
+    )
+  )
+  
+  timeline <- (
+    ggplot(dat)
+    + { if(is.null(color_by)) aes(x = gene, color = fold >= 1) else aes(x = gene, color = .data[[color_by]]) }
+    + geom_linerange(aes(ymax = fold_trans), ymin = origin, linewidth = 2 + (size_boost * 0.5))
+    + geom_hline(yintercept = origin, linewidth = 0.3, linetype = "dotted")
+    + geom_text(aes(
+        label = str_c(round(fold, 2), stars.pval(p.value) |> str_replace(fixed("."), ""), sep = " "), 
+        y = ifelse(fold_trans > origin, fold_trans + fold_amp, fold_trans - fold_amp),
+        hjust = ifelse(fold > 1, 0, 1)
+      ),
+      vjust = 0.5, angle = 0, size = 2 + (size_boost * 0.25), check_overlap = TRUE
+    )
+    + scale_color_manual(" ", values = colors)
+    + scale_y_continuous(breaks = c(0,1,2,3), expand = expansion(mult = 1.01 * (1 + (size_boost/100))))
+    + scale_x_discrete(expand = expansion(add = 1 * size_boost), limits = \(x) rev(x))
+    + labs(
+      x = "",
+      y = ifelse(trans != "identity", str_glue("Fold Change *({trans} scale)*"), "Fold Change")
+    )
+    + coord_flip()
+    + facet_grid(
+      vars(.data[[facet_rows]]), vars(stage), 
+      scales = "free_y", space = "free_y", labeller = label_wrap_gen(width = 12, multi_line = TRUE)
+    )
+    + { if (!is.null(color_by)) guides(color = guide_legend(title = color_by)) }
+    + theme(
+      legend.position = ifelse(is.null(color_by), "none", "bottom")
+      , axis.text.x = element_blank()
+      , axis.title.x = element_markdown(size = 9)
+      , axis.text.y = element_text(size = 7)
+      , strip.text = element_text(size = 5 * size_boost)
+      , plot.title = element_markdown(size = 9, face = "plain", vjust = 1, hjust = 0.5)
+    )
+  )
+  
+  return(timeline)
+}

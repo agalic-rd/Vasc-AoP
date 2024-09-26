@@ -1,0 +1,320 @@
+```{r}
+source(here::here("src", "setup.R"), echo = FALSE)
+```
+
+<!------------------------------------------------------------------------------>
+<!------------------------------------------------------------------------------>
+# I. Data:
+***
+
+```{r}
+(supplementary_data <- load_supplementary_data())
+
+(clearing <- load_clearing_data())
+
+clearing_P4 <- list(data = purrr::modify_tree(clearing$data, leaf = \(x) filter(x, stage == "P4")))
+clearing_P8 <- list(data = purrr::modify_tree(clearing$data, leaf = \(x) filter(x, stage == "P8")))
+clearing_P12 <- list(data = purrr::modify_tree(clearing$data, leaf = \(x) filter(x, stage == "P12")))
+clearing_P21 <- list(data = purrr::modify_tree(clearing$data, leaf = \(x) filter(x, stage == "P21")))
+```
+
+```{r}
+clearing_model <- function(data, resp_name, family = "Gamma") {
+  
+  form <- stringr::str_glue("{resp_name} ~ condition * level + offset(log(cerebellar_volume)) + (1 | mouse)")
+  start_values <- list(beta = c(log(mean(data[[resp_name]])), rep(0, 3)))
+  
+  if (length(unique(data$level)) == 1) {
+    form <- stringr::str_glue("{resp_name} ~ condition + offset(log(cerebellar_volume)) + (1 | mouse)")
+    start_values <- list(beta = c(log(mean(data[[resp_name]])), rep(0, 1)))
+  }
+  
+  mod_gamma <- purrr:::capture_output(
+    glmmTMB(
+      as.formula(form),
+      family = list(family = family, link = "log"),
+      data = data,
+      start = start_values,
+      REML = TRUE
+    )
+  )
+  
+  return(list(mod_gamma$result))
+}
+
+make_mod_params_plots <- function(data, vars, family, total_only = FALSE) {
+  
+  if (total_only) {
+    data <- data |> filter(level == "Total")
+  } else {
+    data <- data |> filter(level != "Total")
+  }
+  
+  purrr::map(
+    vars,
+    \(var) {
+      models <- data |> 
+        select(level, stage, condition, mouse, cerebellar_volume, any_of(var)) |>
+        group_split(stage) |> 
+        purrr::map_dfr(\(dat) dat |> 
+            summarize(stage = first(stage), mod = clearing_model(pick(everything()), var, family), var_name = var) |> 
+            select(-any_of(var))
+        )
+      
+      params <- models |> 
+        group_by(var_name, stage) |> 
+        reframe(purrr::map_dfr(mod, parameters))
+      
+      perfs <- models |> 
+        group_by(var_name, stage) |> 
+        reframe(purrr::map_dfr(mod, performance))
+      
+      purrr::pwalk(
+        models,
+        \(var_name, stage, mod) make_signif_boxplot(mod, xaxis = "condition", subtitle = stage) |>
+          save_png(stringr::str_glue("mod_{var_name}_clearing_{family}_{stage}{if (total_only) '_total' else ''}"), subfolder = "IHC", display = FALSE)
+      )
+      
+      if (!total_only) {
+        purrr::pwalk(
+          models,
+          \(var_name, stage, mod) make_signif_boxplot_inter(mod, pred1 = "condition", pred2 = "level") |>
+            save_png(stringr::str_glue("mod_{var_name}_clearing_{family}_inter_{stage}"), subfolder = "IHC", display = FALSE)
+        )
+      }
+      
+      return(list(models = models, params = params, perfs = perfs))
+    }
+  )
+}
+
+gamma_resps <- c("volume", "network_length", "surface_area", "segment_partitioning", "mean_segment_radius", "mean_segment_length", "mean_segment_tortuosity", "mean_segment_volume", "mean_segment_surface_area")
+
+negbin_resps <- c("branchpoints", "endpoints", "number_of_segments")
+
+gamma_mods <- make_mod_params_plots(clearing$data$normal, gamma_resps, "Gamma")
+nbinom_mods <- make_mod_params_plots(clearing$data$normal, negbin_resps, "nbinom2")
+
+gamma_mods_total <- make_mod_params_plots(clearing$data$normal, gamma_resps, "Gamma", total_only = TRUE)
+nbinom_mods_total <- make_mod_params_plots(clearing$data$normal, negbin_resps, "nbinom2", total_only = TRUE)
+```
+
+
+<!------------------------------------------------------------------------------>
+<!------------------------------------------------------------------------------>
+# II. Volume
+***
+
+<!------------------------------------------------------------------------------>
+## 1. Models
+***
+
+**Gaussian:**
+
+```{r}
+clearing_data_normal_small <- clearing_P4$data$normal |>
+  mutate(volume = volume / 1e6, cerebellar_volume = cerebellar_volume / 1e6) |>
+  mutate(mouse = factor(mouse), condition = factor(condition, levels = c("N", "IH")))
+
+mod_vol_clearing_gauss <- glmmTMB(
+  volume ~ condition * level + offset(log(cerebellar_volume)) + (1 | mouse),
+  family = gaussian("log"),
+  data = clearing_data_normal_small,
+  REML = TRUE
+)
+
+cli_h1("[Parameters]")
+parameters(mod_vol_clearing_gauss)
+cli_h1("[Fitness]")
+performance(mod_vol_clearing_gauss)
+```
+
+**Gamma:**
+
+```{r}
+mod_vol_clearing_gamma <- glmmTMB(
+  volume ~ condition * level + offset(log(cerebellar_volume)) + (1 | mouse),
+  family = Gamma("log"),
+  data = clearing_P4$data$normal,
+  REML = TRUE
+)
+
+cli_h1("[Parameters]")
+parameters(mod_vol_clearing_gamma)
+cli_h1("[Fitness]")
+performance(mod_vol_clearing_gamma)
+```
+
+
+
+<!------------------------------------------------------------------------------>
+## 2. Model Diagnostics
+***
+
+### Residual diagnostics
+
+```{r fig.width = 10}
+check_model(mod_vol_clearing_gamma)
+
+make_acf_plot(mod_vol_clearing_gamma)
+```
+
+
+### Predictive checks
+
+```{r}
+mod_vol_clearing_gamma_dharma <- DHARMa::simulateResiduals(mod_vol_clearing_gamma, plot = FALSE, n = 300, seed = getOption("seed"))
+mod_vol_clearing_gamma_dharma_t <- t(mod_vol_clearing_gamma_dharma$simulatedResponse)
+```
+
+```{r fig.width = 10}
+ppc_plots(mod_vol_clearing_gamma, simulations = mod_vol_clearing_gamma_dharma_t, term = "Condition")
+```
+
+```{r fig.width = 10}
+ppc_stat_plots(Calb_P8_mod_Vol_PC, simulations = Calb_P8_mod_Vol_PC_dharma_t, term = "Condition")
+```
+
+
+
+<!------------------------------------------------------------------------------>
+## 3. Model Analysis
+***
+
+### Model parameters
+
+**All effects (Wald):**
+
+```{r}
+parameters(
+  mod_vol_clearing_gamma, exponentiate = should_exp(mod_vol_clearing_gamma),
+  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+)
+```
+
+**Main effects (Wald):**
+
+```{r}
+car::Anova(mod_vol_clearing_gamma, type = 3)
+```
+
+
+### Marginal means
+
+```{r}
+cli_h1("[Observed]")
+
+distribution_summary(get_data(mod_vol_clearing_gamma), dvs = find_response(mod_vol_clearing_gamma), between = "Condition")
+
+cli_h1("[Emmeans]")
+
+emmeans(mod_vol_clearing_gamma, specs = "Condition", type = "response")
+```
+
+
+### Contrasts
+
+```{r}
+cli_h1("[Link scale]")
+
+emmeans(Calb_P8_mod_Vol_PC, specs = "Condition", type = "response") |> 
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+
+cli_h1("[Response scale]")
+
+emmeans(Calb_P8_mod_Vol_PC, specs = "Condition", regrid = "response") |>
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+```
+
+
+Plot:
+
+```{r fig.width = 6, fig.height = 5}
+make_signif_boxplot(mod_vol_clearing_gamma, xaxis = "condition", subtitle = "P4") |>
+  save_png("mod_vol_clearing_gamma_P4")
+```
+
+```{r fig.width = 6, fig.height = 5}
+make_signif_boxplot_inter(mod_vol_clearing_gamma, pred1 = "condition", pred2 = "level") |> 
+  save_png("mod_vol_clearing_gamma_inter_P4")
+```
+
+
+<!------------------------------------------------------------------------------>
+<!------------------------------------------------------------------------------>
+# III. Network Length
+***
+
+<!------------------------------------------------------------------------------>
+## 1. Models
+***
+
+**Gaussian:**
+
+<!------------------------------------------------------------------------------>
+<!------------------------------------------------------------------------------>
+# IV. Surface Area
+***
+
+<!------------------------------------------------------------------------------>
+## 1. Models
+***
+
+**Gaussian:**
+
+<!------------------------------------------------------------------------------>
+<!------------------------------------------------------------------------------>
+# V. Branchpoints
+***
+
+<!------------------------------------------------------------------------------>
+## 1. Models
+***
+
+**Gaussian:**
+
+<!------------------------------------------------------------------------------>
+<!------------------------------------------------------------------------------>
+# VI. Endpoints
+***
+
+<!------------------------------------------------------------------------------>
+## 1. Models
+***
+
+**Gaussian:**
+
+<!------------------------------------------------------------------------------>
+<!------------------------------------------------------------------------------>
+# VII. Number of Segments
+***
+
+<!------------------------------------------------------------------------------>
+## 1. Models
+***
+
+**Gaussian:**
+
+<!------------------------------------------------------------------------------>
+<!------------------------------------------------------------------------------>
+# VIII. Segment Partitioning
+***
+
+<!------------------------------------------------------------------------------>
+## 1. Models
+***
+
+**Gaussian:**
+
+<!------------------------------------------------------------------------------>
+<!------------------------------------------------------------------------------>
+# IX. Mean Segment Radius
+***
+
+<!------------------------------------------------------------------------------>
+## 1. Models
+***
+
+**Gaussian:**
+
+
