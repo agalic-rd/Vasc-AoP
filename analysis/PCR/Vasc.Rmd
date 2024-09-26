@@ -25,7 +25,7 @@ Let's define the model we will fit to each `Gene`'s `DCq` data.
 Here, we will fit a simple Linear Model, which is largely similar to running a t-test between both conditions:
 
 ```{r}
-ND_model <- function(data) {
+vasc_model <- function(data) {
   glmmTMB(dcq ~ condition, family = gaussian("identity"), data = data, contrasts = list(condition = "contr.sum"))
 }
 ```
@@ -48,7 +48,7 @@ compute_fold_change <- function(mod) {
 (vasc_data$models <- vasc_data$clean
   |> group_split(stage, gene)
   |> map_dfr(
-    \(d) summarize(d, mod = pick(condition, dcq) |> ND_model() |> list(), .by = c(stage, gene)), 
+    \(d) summarize(d, mod = pick(condition, dcq) |> vasc_model() |> list(), .by = c(stage, gene)), 
     .progress = "Fitting models:"
   )
   |> filter(!has_na_coefs(mod)) # Removing models that did not fit properly
@@ -64,7 +64,7 @@ compute_fold_change <- function(mod) {
 
 ## Predictions
 
-For each model we fit, we can then extract the CI and p.value for the relevant contrasts, and use those to establish if a `Gene` was up or down-regulated:
+For each model we fit, we can then extract the CI and p_value for the relevant contrasts, and use those to establish if a `Gene` was up or down-regulated:
 
 ```{r}
 get_emmeans_data <- function(mod) {
@@ -73,7 +73,7 @@ get_emmeans_data <- function(mod) {
     |> contrast(method = "pairwise", adjust = "none", infer = TRUE)
     |> as.data.frame()
     |> pivot_wider(names_from = contrast, values_from = estimate)
-    |> select(last_col(), LCB = lower.CL, UCB = upper.CL, p.value)
+    |> select(last_col(), LCB = lower.CL, UCB = upper.CL, p_value = p.value)
     |> mutate(across(where(is.character), \(x) na_if(x, "NaN")))
   )
 }
@@ -83,9 +83,9 @@ get_emmeans_data <- function(mod) {
 (vasc_data$predictions <- vasc_data$models
   |> group_split(stage, gene)
   |> map_dfr(\(d) mutate(d, get_emmeans_data(mod[[1]])), .progress = "Extracting model predictions:")
-  |> filter(!is.na(p.value))
-  |> mutate(expression = get_regulation_type(fold, p.value))
-  |> select(stage, gene, fold, expression, matches("-|/"), LCB, UCB, p.value)
+  |> filter(!is.na(p_value))
+  |> mutate(expression = get_regulation_type(fold, p_value))
+  |> select(stage, gene, fold, expression, matches("-|/"), LCB, UCB, p_value)
 )
 ```
 
@@ -97,8 +97,14 @@ To get a better idea of how each `Gene`'s regulation changes through time, we ca
 (
   vasc_data$predictions 
   |> left_join(supplementary_data$gene_data$vasc, join_by(gene))
-  |> filter(p.value <= .05)
-  |> select(stage, gene, fold, p.value, expression, pathway, effect)
+  |> filter(p_value <= .05)
+  |> select(stage, gene, fold, p_value, expression, pathway, effect)
+  |> mutate(effect = case_when(
+      str_detect(expression, "Downregulated") & effect == "Pro" ~ "Anti",
+      str_detect(expression, "Downregulated") & effect == "Anti" ~ "Pro",
+      .default = effect
+    )
+  )
   |> make_fold_timeline_plot(facet_rows = "pathway", color_by = "effect", size_boost = 1.5)
   |> save_png("vasc_timeline", subfolder = "PCR")
 )

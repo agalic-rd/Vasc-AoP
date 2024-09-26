@@ -181,25 +181,25 @@ load_pcr_data <- function(target, reprocess = FALSE, max_cq_clean = 33, refit = 
       
       compute_fold_change <- function(mod) {
         return(
-          get_data(mod) 
-          |> select(condition, dcq) 
-          |> pivot_wider(names_from = condition, values_from = dcq, values_fn = \(x) mean(x, na.rm = TRUE)) 
-          |> summarize(fold = 2**(-1 * (IH - N))) 
-          |> pull(fold) 
+          get_data(mod)
+          |> select(condition, dcq)
+          |> pivot_wider(names_from = condition, values_from = dcq, values_fn = \(x) mean(x, na.rm = TRUE))
+          |> summarize(fold = 2**(-1 * (IH - N)))
+          |> pull(fold)
         )
       }
       
       ## Fitting the provided model to each Gene, for each Layer and Stage
       res$models <- (
         res$clean
-        |> group_split(stage, layer, gene)
+        |> group_split(stage, gene)
         |> map_dfr(
-          \(d) suppressMessages({summarize(d, mod = list(model(pick(everything()))), .by = c(stage, layer, gene))}), 
+          \(d) suppressMessages({summarize(d, mod = list(model(pick(everything()))), .by = c(stage, gene))}), 
           .progress = "Fitting models:"
         )
         |> filter(!has_na_coefs(mod))
         |> mutate(fold = map_dbl(mod, compute_fold_change))
-        |> select(stage, layer, gene, fold, mod)
+        |> select(stage, gene, fold, mod)
       )
       
       get_emmeans_data <- function(mod) {
@@ -208,7 +208,7 @@ load_pcr_data <- function(target, reprocess = FALSE, max_cq_clean = 33, refit = 
           |> contrast(method = "pairwise", adjust = "none", infer = TRUE)
           |> as.data.frame()
           |> pivot_wider(names_from = contrast, values_from = estimate)
-          |> select(last_col(), LCB = lower.CL, UCB = upper.CL, p_value)
+          |> select(last_col(), LCB = lower.CL, UCB = upper.CL, p_value = p.value)
           |> mutate(across(where(is.character), \(x) na_if(x, "NaN")))
         )
       }
@@ -216,11 +216,11 @@ load_pcr_data <- function(target, reprocess = FALSE, max_cq_clean = 33, refit = 
       ## Extracting model predictions
       res$predictions <- (
         res$models
-        |> group_split(stage, layer, gene)
+        |> group_split(stage, gene)
         |> map_dfr(\(d) mutate(d, get_emmeans_data(mod[[1]])), .progress = "Extracting model predictions:")
         |> filter(!is.na(p_value))
         |> mutate(expression = get_regulation_type(fold, p_value))
-        |> select(stage, layer, gene, fold, expression, matches("-|/"), LCB, UCB, p_value)
+        |> select(stage, gene, fold, expression, matches("-|/"), LCB, UCB, p_value)
       )
     }
     
