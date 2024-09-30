@@ -72,7 +72,7 @@ load_clearing_data <- function(path = configs$data$IHC$clearing_raw) {
         summarize(across(where(is.numeric), sum), .by = c(Stage, Mouse, Condition)) |> 
         mutate(Level = "Total")
     )
-    |> filter(Mouse != "KA4N") # TEMP
+    |> filter(Mouse != "KA4N") # TEMP !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     |> arrange(Stage, Condition, Level, Mouse)
   )
   
@@ -113,11 +113,6 @@ load_clearing_data <- function(path = configs$data$IHC$clearing_raw) {
   return(list(data = list(normal = clearing_data, binned = clearing_binned_data)))
 }
 
-# Load Vasc PCR data
-load_vasc_data <- function(path = configs$data$PCR$vasc_raw_data) {
-  
-}
-
 ## Loading the PCR data
 # @target: which data to load (i.e. OS or ND)
 # @reprocess: if TRUE, re-process the raw data, else simply load it from the processed data
@@ -149,7 +144,7 @@ load_pcr_data <- function(target, reprocess = FALSE, max_cq_clean = 33, refit = 
       |> tidyr::extract(
         mouse,
         into = c("bloodline", "pup", "condition"),
-        regex = "^(\\w{2})(\\d{1})([hH]+|[nN]+)$",
+        regex = "^(\\w{1,2})(\\d{1,2})([hH]+|[nN]+)$",
         convert = TRUE, remove = FALSE
       )
       |> mutate(condition = if_else(condition == "H", "IH", condition))
@@ -164,6 +159,7 @@ load_pcr_data <- function(target, reprocess = FALSE, max_cq_clean = 33, refit = 
       res$raw
       ## Filtering useless data points
       |> filter(!outlier)
+      |> filter(experiment != "B") # !!!
       |> drop_na(mean_cq, dcq)
       |> filter(mean_cq <= max_cq_clean)
       |> filter(n() >= 3, .by = c(stage, gene, condition)) # Checking that there are at least 3 values per Condition
