@@ -96,7 +96,7 @@ To get a better idea of how each `Gene`'s regulation changes through time, we ca
 ```{r fig.width = 12, fig.height = 8}
 (
   vasc_data$predictions 
-  |> left_join(supplementary_data$gene_data$vasc, join_by(gene))
+  |> left_join(supplementary_data$gene_data$ref, join_by(gene))
   |> filter(p_value <= .05)
   |> select(stage, gene, fold, p_value, expression, pathway, effect)
   |> mutate(effect = case_when(
@@ -108,4 +108,129 @@ To get a better idea of how each `Gene`'s regulation changes through time, we ca
   |> make_fold_timeline_plot(facet_rows = "pathway", color_by = "effect", size_boost = 1.5)
   |> save_png("vasc_timeline", subfolder = "PCR")
 )
+```
+
+## Temporo-functional heatmap
+
+```{r}
+test_data <- vasc_data$predictions |>
+  filter(p_value <= .05) |>
+  left_join(supplementary_data$gene_data$fx, by = "gene", relationship = "many-to-many") |>
+  select(stage, gene, fold, p_value, fx, effect)
+```
+```{r}
+make_heatmap(test_data, xaxis = "fx", facet = "stage") |> 
+  save_png("vasc_heatmap", subfolder = "PCR", height = 10, width = 15)
+```
+
+# Weird figure
+
+```{r fig.width = 20, fig.height = 14}
+colors <- c(
+      "Vascular stabilization and maturation" = "#FF6B6B",
+      "ECM and endothelial permeability" = "#4ECDC4",
+      "Endothelial proliferation and survival" = "#45B7D1",
+      "Vascular invasion and sprouting" = "#FFA07A",
+      "Vascular remodelling and patterning" = "#98D8C8",
+      "Hypoxia-induced angiogenesis" = "#FFD700"
+    )
+
+(ggplot(test_data, aes(x = stage, y = fold, color = fx, shape = effect)) 
+  + geom_hline(yintercept = 1, linetype = "dashed") 
+  + geom_vline(
+    aes(xintercept = as.numeric(factor(stage)) - 0.5), 
+    linetype = "dashed", color = "gray70"
+  )
+  + geom_point(
+      size = 3, 
+      position = position_dodge(width = 0.9)
+    ) 
+  + geom_text(
+      aes(
+        label = paste(gene, stars_pval(p_value)),
+        vjust = ifelse(effect == "positive", 1.7, -0.7)
+      ),
+      hjust = 0.4,
+      size = 3,
+      position = position_dodge(width  = 0.9)
+    ) 
+  + scale_shape_manual(values = c("negative" = 25, "positive" = 24)) 
+  + scale_color_manual(values = c(
+      "Vascular stabilization and maturation" = "#FF6B6B",
+      "ECM and endothelial permeability" = "#4ECDC4",
+      "Endothelial proliferation and survival" = "#45B7D1",
+      "Vascular invasion and sprouting" = "#FFA07A",
+      "Vascular remodelling and patterning" = "#98D8C8",
+      "Hypoxia-induced angiogenesis" = "#FFD700"
+    )) 
+  + theme_minimal() 
+  + theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    legend.position = "bottom",
+    legend.text = element_text(size = 12, vjust = 0.5),
+    legend.box = "vertical",
+    legend.title = element_text(face = "bold"),
+    legend.margin = margin(t = 10, b = 10)
+  )
+  + guides(
+    colour = guide_legend(override.aes = list(alpha = 1), order = 1, title = "Function"),
+    shape = guide_legend(override.aes = list(alpha = 1), order = 2, title = "Effect")
+  )
+) |> save_png("vasc_timeline_2", subfolder = "PCR", width = 20, height = 14, display = TRUE)
+```
+
+Using text only:
+
+```{r}
+# Up: \u25B2
+# Down: \u25BC
+
+(
+  test_data |> 
+  mutate(
+    label = case_when(
+      effect == "positive" ~ paste0("\u25B2 ", gene, stars_pval(p_value)),
+      effect == "negative" ~ paste0("\u25BC ", gene, stars_pval(p_value)),
+      .default = paste0(gene, stars_pval(p_value))
+    )
+  )
+  |> ggplot(aes(x = fx, y = fold, color = fx, shape = effect))
+  + geom_hline(yintercept = 1, linetype = "dashed")
+  + geom_point(alpha = 0, size = 3, show.legend = TRUE)
+  + geom_text_repel(
+      aes(label = label),
+      max.overlaps = 50,
+      min.segment.length = Inf,
+      direction = "x",
+      force = 2,
+      point.size = NA,
+      seed = 47,
+      show.legend = FALSE
+    )
+  + facet_wrap(~ stage, ncol = 5, strip.position = "bottom")
+  + scale_shape_manual(values = c("negative" = 25, "positive" = 24)) 
+  + scale_color_manual(values = colors) 
+  + labs(y = "Fold Change", x = NULL) 
+  + theme_minimal() 
+  + theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    legend.position = "bottom",
+    legend.text = element_text(size = 12, vjust = 0.5),
+    legend.box = "vertical",
+    legend.title = element_text(face = "bold"),
+    legend.margin = margin(t = 10, b = 10),
+    strip.placement = "outside",
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold"),
+    panel.margin = margin(t = 0, r = 0, b = 0, l = 0)
+  )
+  + guides(
+    colour = guide_legend(override.aes = list(alpha = 1), order = 1, title = "Function"),
+    shape = guide_legend(override.aes = list(alpha = 1), order = 2, title = "Effect")
+  )
+) |> save_png("vasc_timeline_4", subfolder = "PCR", width = 20, height = 14, display = TRUE)
 ```

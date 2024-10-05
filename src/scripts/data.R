@@ -46,6 +46,10 @@ load_supplementary_data <- function() {
     set_names(excel_sheets(configs$data$gene_data)), 
     \(sheet) read_excel(configs$data$gene_data, sheet) |> janitor::clean_names()
   )
+
+  res$gene_data$fx <- res$gene_data$fx |> 
+    tidyr::pivot_longer(ends_with("_effect"), names_pattern = "(.+)_effect", names_to = "effect", values_to = "gene") |> 
+    tidyr::separate_longer_delim(gene, delim = "; ")
   
   return(res)
 }

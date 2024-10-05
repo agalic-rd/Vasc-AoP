@@ -34,6 +34,10 @@ rmatch <- function(x, name) {
 ####🔺Formatting utils ####
 #-------------------------#
 
+stars_pval <- function(p) {
+  gtools::stars.pval(p) |> stringr::str_replace(fixed("."), "")
+}
+
 label_pval <- function(p) {
   str_c(scales::label_pvalue()(p) |> str_remove(">") |> str_trim(), gtools::stars.pval(p) |> str_replace(fixed("."), ""), sep = " ")
 }

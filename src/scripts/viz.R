@@ -2,6 +2,39 @@
 ####💠 Data Viz 💠####
 ####╚════    ════╝####
 
+#--------------------#
+####🔺Correlation ####
+#--------------------#
+
+corr_matrix_plot <- function(dat, vars, title = "") {
+  return(
+    dat
+    |> mutate(
+      across(where(is.character), factor),
+      across(where(is.factor), label_encoding)
+    )
+    |> correlation(select = vars, include_factors = TRUE, redundant = TRUE, method = "auto")
+    |> rename(R = matches("^r$|^rho$"))
+    |> mutate(across(matches("Parameter[1-2]"), \(x) factor(x, levels = vars)))
+    |> ggplot(aes(x = Parameter1, y = Parameter2))
+      + geom_tile(aes(fill = R), colour = "white", linewidth = 1.2, stat = "identity")
+      + geom_text(aes(label = round(R, 2), colour = abs(R) > 0.5), size = rel(4.5))
+      + scale_color_manual(values = c("black", "white"))
+      + scale_fill_gradient2(na.value = "white", breaks = seq(-1, 1, 0.2), limits = c(-1, 1))
+      + scale_x_discrete(position = "top")
+      + scale_y_discrete(limits = rev)
+      + guides(fill = guide_colourbar(title = "R", barheight = rel(17), title.hjust = 0.15), colour = "none")
+      + labs(title = title)
+      + theme(
+        plot.title = element_markdown(hjust = 0.5)
+        , axis.title.x = element_blank()
+        , axis.title.y = element_blank()
+        , axis.text.x = element_text(face = "bold", angle = 30, hjust = 0, size = 8)
+        , axis.text.y = element_text(face = "bold", angle = 45, hjust = 1, size = 8)
+      )
+  )
+}
+
 #-----------------#
 ####🔺Boxplots ####
 #-----------------#
@@ -331,4 +364,46 @@ make_fold_timeline_plot <- function(
   )
   
   return(timeline)
+}
+
+#----------------#
+####🔺Heatmap ####
+#----------------#
+
+make_heatmap <- function(data, xaxis, facet) {
+  
+  max_upreg <- data |> filter(fold >= 1) |> pull(fold) |> max()
+  
+  return(
+    ggplot(data, aes(x = .data[[xaxis]], y = gene))
+    + scale_fill_gradient(
+      name = regulation_type$UPREG, 
+      low = "seagreen2", high = "seagreen4", limits = c(1, max_upreg), 
+      trans = scales::log10_trans(), labels = \(x) round(x, 2)
+    )
+    + geom_tile(data = \(d) filter(d, fold >= 1), aes(fill = fold), colour = "white")
+    + new_scale("fill")
+    + scale_fill_gradient(
+      name = regulation_type$DOWNREG, 
+      low = "firebrick4", high = "firebrick2", limits = c(0, 1), 
+      labels = \(x) round(x, 2)
+    )
+    + geom_tile(data = \(d) filter(d, fold < 1), aes(fill = fold), colour = "white")
+    + geom_text(
+      aes(label = paste(round(fold, 2), stars.pval(p_value), sep = " ")), size = 3, colour = "white", fontface = "bold", 
+      check_overlap = TRUE
+    )
+    + facet_grid(cols = vars(.data[[facet]]), scales = "free_x", space = "free_x")
+    + theme_light_mar
+    + theme(
+      legend.title = element_markdown(face = "bold", vjust = 0.80),
+      legend.position = "bottom",
+      legend.text = element_text(size = 11),
+      strip.text = element_text(face = "bold"),
+      axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1),
+      axis.text.y = element_text(hjust = 0),
+      axis.ticks = element_line(linewidth = 0.4)
+    )
+    + labs(x = xaxis, y = "")
+  )
 }
