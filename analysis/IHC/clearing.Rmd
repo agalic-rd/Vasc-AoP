@@ -100,6 +100,74 @@ gamma_mods_total <- make_mod_params_plots(clearing$data$normal, gamma_resps, "Ga
 nbinom_mods_total <- make_mod_params_plots(clearing$data$normal, negbin_resps, "nbinom2", total_only = TRUE)
 ```
 
+```{r}
+fit_all_models <- function(data, vars, family, total_only = FALSE) { 
+  
+  if (total_only) {
+    data <- data |> filter(level == "Total")
+  } else {
+    data <- data |> filter(level != "Total")
+  }
+   
+  purrr::map_dfr(
+    vars,
+    function(var) {
+      models <- data |>
+        select(level, stage, condition, mouse, cerebellar_volume, any_of(var)) |>
+        group_split(stage) |>
+        purrr::map_dfr(\(dat) dat |>
+            summarize(stage = first(stage), mod = clearing_model(pick(everything()), var, family), var_name = var) |>
+            select(-any_of(var))
+        )
+      
+      return(models)
+    },
+    .progress = TRUE
+  )
+}
+
+gamma_resps <- c("volume", "network_length", "surface_area", "segment_partitioning", "mean_segment_radius", "mean_segment_length", "mean_segment_tortuosity", "mean_segment_volume", "mean_segment_surface_area")
+
+negbin_resps <- c("branchpoints", "endpoints", "number_of_segments")
+
+gamma_mods <- fit_all_models(clearing$data$normal, gamma_resps, "Gamma", total_only = TRUE)
+nbinom_mods <- fit_all_models(clearing$data$normal, negbin_resps, "nbinom2", total_only = TRUE)
+
+all_mods <- bind_rows(gamma_mods, nbinom_mods)
+```
+
+Temporary, to rework with facet_grid
+
+```{r fig.height = 20, fig.width = 15}
+fig_1 <- c("volume", "network_length", "surface_area")
+fig_2 <- c("number_of_segments", "branchpoints", "segment_partitioning", "mean_segment_tortuosity")
+fig_3 <- c("mean_segment_volume", "mean_segment_surface_area", "mean_segment_length", "mean_segment_radius")
+
+all_mods |> 
+  filter(var_name %in% fig_1) |>
+  mutate(var_name = factor(var_name, levels = fig_1)) |> 
+  group_by(var_name, stage) |> 
+  group_map(function(d, g) make_signif_boxplot(first(d$mod), xaxis = "condition")) |> 
+  patchwork::wrap_plots(ncol = 4, axes = "collect") |> 
+  save_png("fig_patchwork_1", subfolder = "IHC", width = 18, height = 15, display = TRUE)
+
+all_mods |> 
+  filter(var_name %in% fig_2) |>
+  mutate(var_name = factor(var_name, levels = fig_2)) |> 
+  group_by(var_name, stage) |> 
+  group_map(function(d, g) make_signif_boxplot(first(d$mod), xaxis = "condition")) |> 
+  patchwork::wrap_plots(ncol = 4, axes = "collect") |> 
+  save_png("fig_patchwork_2", subfolder = "IHC", width = 18, height = 20, display = TRUE)
+
+all_mods |> 
+  filter(var_name %in% fig_3) |>
+  mutate(var_name = factor(var_name, levels = fig_3)) |> 
+  group_by(var_name, stage) |> 
+  group_map(function(d, g) make_signif_boxplot(first(d$mod), xaxis = "condition")) |> 
+  patchwork::wrap_plots(ncol = 4, axes = "collect") |> 
+  save_png("fig_patchwork_3", subfolder = "IHC", width = 18, height = 20, display = TRUE)
+```
+
 
 <!------------------------------------------------------------------------------>
 <!------------------------------------------------------------------------------>

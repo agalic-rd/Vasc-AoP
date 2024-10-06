@@ -150,6 +150,7 @@ make_signif_boxplot <- function(
       aes(y = min - 0.05 * amp, fontface = "bold", label = N, color = .data[[xaxis]]),
       data = extra_dat, fill = NA, size = 5, alpha = 0.7
     )
+    + scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
     + theme(
       legend.position = "none", 
       panel.grid.major = element_blank(), 
