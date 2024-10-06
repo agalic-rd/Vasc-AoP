@@ -76,7 +76,7 @@ load_clearing_data <- function(path = configs$data$IHC$clearing_raw) {
         summarize(across(where(is.numeric), sum), .by = c(Stage, Mouse, Condition)) |> 
         mutate(Level = "Total")
     )
-    |> filter(Mouse != "KA4N") # TEMP !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    |> filter(Mouse != "KA4N")
     |> arrange(Stage, Condition, Level, Mouse)
   )
   
@@ -91,7 +91,8 @@ load_clearing_data <- function(path = configs$data$IHC$clearing_raw) {
   clearing_binned_data <- (
     purrr::map(
       binned_col_names,
-      \(col) select(clearing_binned_data, level, stage, mouse, condition, bins, any_of(col))
+      \(col) select(clearing_binned_data, level, stage, mouse, condition, bins, any_of(col)) |> 
+        mutate(across(c(condition, stage), \(x) to_factor(x)))
     )
     |> set_names(binned_col_names)
   )
@@ -99,7 +100,8 @@ load_clearing_data <- function(path = configs$data$IHC$clearing_raw) {
   # Unbinned variables
   clearing_data <- clearing_data |>
     select(-contains("__")) |>
-    janitor::clean_names()
+    janitor::clean_names() |> 
+    mutate(across(c(condition, stage), \(x) to_factor(x)))
   
   # Data checks (TODO: move to their own function)
   cerebellar_values_not_equal <- clearing_data |> 
@@ -181,7 +183,7 @@ load_pcr_data <- function(target, reprocess = FALSE, max_cq_clean = 33, refit = 
       
       compute_fold_change <- function(mod) {
         return(
-          get_data(mod)
+          insight::get_data(mod)
           |> select(condition, dcq)
           |> pivot_wider(names_from = condition, values_from = dcq, values_fn = \(x) mean(x, na.rm = TRUE))
           |> summarize(fold = 2**(-1 * (IH - N)))

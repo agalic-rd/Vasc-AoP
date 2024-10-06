@@ -52,7 +52,7 @@ make_mod_params_plots <- function(data, vars, family, total_only = FALSE) {
   
   purrr::map(
     vars,
-    \(var) {
+    function(var) {
       models <- data |> 
         select(level, stage, condition, mouse, cerebellar_volume, any_of(var)) |>
         group_split(stage) |> 
@@ -84,7 +84,8 @@ make_mod_params_plots <- function(data, vars, family, total_only = FALSE) {
       }
       
       return(list(models = models, params = params, perfs = perfs))
-    }
+    },
+    .progress = TRUE
   )
 }
 

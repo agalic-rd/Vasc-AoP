@@ -106,7 +106,7 @@ make_signif_boxplot <- function(
     |> mutate(
       x1 = match(X1, levels(dat[[xaxis]])),
       x2 = match(X2, levels(dat[[xaxis]])),
-      p.signif = label_pval(p_value)
+      p.signif = label_pval(p.value)
     ) 
     |> arrange(x.diff := abs(x2 - x1))
     |> mutate(
@@ -219,7 +219,7 @@ make_signif_boxplot_inter <- function(
     mutate(
       x1 = (match(.data[[pred2]], levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(X1, levels(dat[[pred1]])),
       x2 = (match(.data[[pred2]], levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(X2, levels(dat[[pred1]])),
-      p.signif = label_pval(p_value)
+      p.signif = label_pval(p.value)
     ) |>
     arrange(x.diff := abs(x2 - x1)) |>
     mutate(
@@ -240,7 +240,7 @@ make_signif_boxplot_inter <- function(
                     (match(F1, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(X2, levels(dat[[pred1]]))),
       x2 = 0.5 * ((match(F2, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(X1, levels(dat[[pred1]])) +
                     (match(F2, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(X2, levels(dat[[pred1]]))),
-      p.signif = label_pval(p_value)
+      p.signif = label_pval(p.value)
     ) |>
     arrange(x.diff := abs(x2 - x1)) |>
     mutate(
@@ -334,7 +334,7 @@ make_fold_timeline_plot <- function(
     + geom_linerange(aes(ymax = fold_trans), ymin = origin, linewidth = 2 + (size_boost * 0.5))
     + geom_hline(yintercept = origin, linewidth = 0.3, linetype = "dotted")
     + geom_text(aes(
-        label = str_c(round(fold, 2), stars.pval(p_value) |> str_replace(fixed("."), ""), sep = " "), 
+        label = str_c(round(fold, 2), stars_pval(p_value), sep = " "), 
         y = ifelse(fold_trans > origin, fold_trans + fold_amp, fold_trans - fold_amp),
         hjust = ifelse(fold > 1, 0, 1)
       ),

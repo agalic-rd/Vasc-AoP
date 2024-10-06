@@ -113,13 +113,11 @@ To get a better idea of how each `Gene`'s regulation changes through time, we ca
 ## Temporo-functional heatmap
 
 ```{r}
-test_data <- vasc_data$predictions |>
+vasc_data$predictions |>
   filter(p_value <= .05) |>
   left_join(supplementary_data$gene_data$fx, by = "gene", relationship = "many-to-many") |>
-  select(stage, gene, fold, p_value, fx, effect)
-```
-```{r}
-make_heatmap(test_data, xaxis = "fx", facet = "stage") |> 
+  select(stage, gene, fold, p_value, fx, effect) |> 
+  make_heatmap(xaxis = "fx", facet = "stage") |> 
   save_png("vasc_heatmap", subfolder = "PCR", height = 10, width = 15)
 ```
 
@@ -127,15 +125,20 @@ make_heatmap(test_data, xaxis = "fx", facet = "stage") |>
 
 ```{r fig.width = 20, fig.height = 14}
 colors <- c(
-      "Vascular stabilization and maturation" = "#FF6B6B",
-      "ECM and endothelial permeability" = "#4ECDC4",
-      "Endothelial proliferation and survival" = "#45B7D1",
-      "Vascular invasion and sprouting" = "#FFA07A",
-      "Vascular remodelling and patterning" = "#98D8C8",
-      "Hypoxia-induced angiogenesis" = "#FFD700"
+      "Vascular stabilization and maturation" = "#fc6203",
+      "ECM and endothelial permeability" = "#026dba",
+      "Endothelial proliferation and survival" = "#ba028c",
+      "Vascular invasion and sprouting" = "#02ba11",
+      "Vascular remodelling and patterning" = "#9004d6",
+      "Hypoxia-induced angiogenesis" = "#fc0341"
     )
 
-(ggplot(test_data, aes(x = stage, y = fold, color = fx, shape = effect)) 
+(
+  vasc_data$predictions |>
+    filter(p_value <= .05) |>
+    left_join(supplementary_data$gene_data$fx, by = "gene", relationship = "many-to-many") |>
+    select(stage, gene, fold, p_value, fx, effect) |> 
+    ggplot(aes(x = stage, y = fold, color = fx, shape = effect)) 
   + geom_hline(yintercept = 1, linetype = "dashed") 
   + geom_vline(
     aes(xintercept = as.numeric(factor(stage)) - 0.5), 
@@ -156,12 +159,12 @@ colors <- c(
     ) 
   + scale_shape_manual(values = c("negative" = 25, "positive" = 24)) 
   + scale_color_manual(values = c(
-      "Vascular stabilization and maturation" = "#FF6B6B",
-      "ECM and endothelial permeability" = "#4ECDC4",
-      "Endothelial proliferation and survival" = "#45B7D1",
-      "Vascular invasion and sprouting" = "#FFA07A",
-      "Vascular remodelling and patterning" = "#98D8C8",
-      "Hypoxia-induced angiogenesis" = "#FFD700"
+      "Vascular stabilization and maturation" = "#fc6203",
+      "ECM and endothelial permeability" = "#026dba",
+      "Endothelial proliferation and survival" = "#ba028c",
+      "Vascular invasion and sprouting" = "#02ba11",
+      "Vascular remodelling and patterning" = "#9004d6",
+      "Hypoxia-induced angiogenesis" = "#fc0341"
     )) 
   + theme_minimal() 
   + theme(
@@ -187,7 +190,10 @@ Using text only:
 # Down: \u25BC
 
 (
-  test_data |> 
+  vasc_data$predictions |>
+  filter(p_value <= .05) |>
+  left_join(supplementary_data$gene_data$fx, by = "gene", relationship = "many-to-many") |>
+  select(stage, gene, fold, p_value, fx, effect) |> 
   mutate(
     label = case_when(
       effect == "positive" ~ paste0("\u25B2 ", gene, stars_pval(p_value)),

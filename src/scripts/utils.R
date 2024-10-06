@@ -39,7 +39,7 @@ stars_pval <- function(p) {
 }
 
 label_pval <- function(p) {
-  str_c(scales::label_pvalue()(p) |> str_remove(">") |> str_trim(), gtools::stars.pval(p) |> str_replace(fixed("."), ""), sep = " ")
+  str_c(scales::label_pvalue()(p) |> str_remove(">") |> str_trim(), stars_pval(p), sep = " ")
 }
 
 get_response_name <- function(var, col = "Label") {
