@@ -90,11 +90,11 @@ load_clearing_data <- function(path = configs$data$IHC$clearing_raw) {
   
   clearing_binned_data <- (
     purrr::map(
-      binned_col_names,
+      rlang::set_names(binned_col_names),
       \(col) select(clearing_binned_data, level, stage, mouse, condition, bins, any_of(col)) |> 
         mutate(across(c(condition, stage), \(x) to_factor(x)))
     )
-    |> set_names(binned_col_names)
+    |> purrr::reduce(\(x, acc) left_join(acc, x, by = c("level", "stage", "mouse", "condition", "bins")))
   )
   
   # Unbinned variables
@@ -116,7 +116,7 @@ load_clearing_data <- function(path = configs$data$IHC$clearing_raw) {
   
   if (nrow(cerebellar_values_not_equal) > 0) cli::cli_alert_warning("Cerebellar values are not equal for some mice")
   
-  return(list(data = list(normal = clearing_data, binned = clearing_binned_data)))
+  return(list(normal = clearing_data, binned = clearing_binned_data))
 }
 
 ## Loading the PCR data

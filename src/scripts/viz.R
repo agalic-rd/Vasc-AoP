@@ -42,7 +42,7 @@ corr_matrix_plot <- function(dat, vars, title = "") {
 ## Generating a boxplot for an individual gene, showing the main effect of a predictor (using the model fitted to this gene's data as input)
 make_signif_boxplot <- function(
     mod, xaxis = "condition", facet = NULL, cluster = "mouse", add_cluster_averages = TRUE, subtitle = NULL, caption = NULL, 
-    invert_DCq = TRUE, scale = "link", adjust = "none", method = "pairwise", resp_name = NULL
+    invert_DCq = TRUE, scale = "link", adjust = "none", method = "pairwise", resp_name = NULL, ncol = 2
 ) {
   
   get_n_units <- function(df) {
@@ -162,7 +162,7 @@ make_signif_boxplot <- function(
     + labs(y = resp_name)
     + {if(!is.null(subtitle)) labs(subtitle = subtitle)}
     + {if(!is.null(caption)) labs(caption = caption)}
-    + {if (!is.null(facet)) facet_wrap( ~ .data[[facet]])}
+    + {if (!is.null(facet)) facet_wrap( ~ .data[[facet]], ncol = ncol)}
     + {if (add_cluster_averages) labs(caption = str_glue("Small round points are individual measurements\n Diamonds represent {cluster}-averages"))}
   )
   
@@ -171,8 +171,8 @@ make_signif_boxplot <- function(
 
 ## Generating a boxplot for an individual gene, showing interaction effects between two predictors (using the model fitted to this gene's data as input)
 make_signif_boxplot_inter <- function(
-    mod, pred1 = "condition", pred2, cluster = NULL, add_cluster_averages = FALSE, invert_DCq = TRUE, stage = NULL,
-    scale = "link", adjust = "none", resp_name = NULL
+    mod, pred1 = "condition", pred2, facet = NULL, cluster = NULL, add_cluster_averages = FALSE, invert_DCq = TRUE, stage = NULL,
+    scale = "link", adjust = "none", resp_name = NULL, ncol = 2
 ) {
   
   get_n_units <- function(df) {
@@ -300,6 +300,7 @@ make_signif_boxplot_inter <- function(
     )
     + labs(y = resp_name, x = str_c(pred1, " by ", pred2))
     + {if(!is.null(stage)) labs(subtitle = str_glue("{stage}"))}
+    + {if (!is.null(facet)) facet_wrap( ~ .data[[facet]], ncol = ncol)}
     + {if (add_cluster_averages) labs(caption = str_glue("Small round points are individual measurements\n Diamonds represent {cluster}-averages"))}
     + scale_x_discrete(labels = \(l) str_replace(l, "_", "\n"))
   )
@@ -406,5 +407,94 @@ make_heatmap <- function(data, xaxis, facet) {
       axis.ticks = element_line(linewidth = 0.4)
     )
     + labs(x = xaxis, y = "")
+  )
+}
+
+#--------------------------#
+####🔺Model diagnostics ####
+#--------------------------#
+
+make_acf_plot <- function(mod) {
+  forecast::ggAcf(residuals(mod, type = "response", retype = "normalized"), color = "#1b6ca8") + 
+    geom_point() + 
+    labs(
+      title = "Autocorrelation of residuals",
+      subtitle = "Data (lines) should be inside the dashed area"
+    ) + 
+    see::theme_lucid() +
+    theme(
+      plot.title = element_markdown(size = 15, margin = margin(0, 0, 0, 1)),
+      plot.subtitle = element_markdown(size = 12, margin = margin(1, 0, 0, 0))
+    )
+}
+
+ppc_plots <- function(mod, simulations, term = "condition", type = "fixed", is_count = NULL, max_cols_per_plot = 3) {
+  
+  Y <- insight::get_response(mod)
+  n_unique <- n_distinct(insight::get_data(mod)[[term]])
+  
+  if(is.null(is_count)) is_count <- ifelse(insight::get_family(mod)$family |> str_detect("binom|poiss"), TRUE, FALSE)
+  
+  # ppc_fun <- ifelse(is_count, bayesplot::ppc_bars, bayesplot::ppc_dens_overlay)
+  ppc_fun_grouped <- ifelse(is_count, bayesplot::ppc_bars_grouped, bayesplot::ppc_dens_overlay_grouped)
+  ppc_fun_pred_grouped <- bayesplot::ppc_intervals_grouped
+  
+  if(type %in% c("fixed", "fe")) {
+    .term <- insight::get_predictors(mod)[[term]]
+    
+    # ppc_global <- ppc_fun(y = Y, yrep = simulations) 
+    if(is_count) ppc_root <- bayesplot::ppc_rootogram(Y, simulations, style = "suspended")
+    
+    ppc_grouped <- ppc_fun_grouped(Y, simulations, group = .term) + 
+      facet_wrap(~ group, ncol = min(max_cols_per_plot, n_unique), scales = "free")
+    ppc_pred_grouped <- ppc_fun_pred_grouped(Y, simulations, group = .term, prob_outer = 0.95) + 
+      facet_wrap(~ group, ncol = min(max_cols_per_plot, n_unique), scales = "free")
+  }
+  else if(type %in% c("random", "re")) {
+    .term <- insight::get_random(mod)[[term]]
+    
+    ppc_grouped <- ppc_fun_grouped(Y, simulations, group = .term) + 
+      facet_wrap(~ group, ncol = min(max_cols_per_plot, n_unique), scales = "free")
+    ppc_pred_grouped <- ppc_fun_pred_grouped(Y, simulations, group = .term, prob_outer = 0.95) + 
+      facet_wrap(~ group, ncol = min(max_cols_per_plot, n_unique), scales = "free")
+  }
+  
+  return(
+    if(type %in% c("fixed", "fe")) {
+      if(is_count) { 
+        (ppc_root / ppc_grouped / ppc_pred_grouped) + plot_layout(guides = 'collect', ncol = 1, nrow = 3) +
+          # plot_annotation(title = "Simulation-based Posterior Predictive Checks", subtitle = str_glue("For [{term}]")) & 
+          theme(legend.position = 'right', axis.title.x = element_blank())
+      } else {
+        (ppc_grouped / (ppc_pred_grouped + theme(axis.title.x = element_blank()))) + plot_layout(ncol = 1, nrow = 2) + 
+          # plot_annotation(title = "Simulation-based Posterior Predictive Checks", subtitle = str_glue("For [{term}]")) & 
+          theme(legend.position = 'right')
+      }
+    }
+    else list(ppc_grouped, ppc_pred_grouped)
+  )
+}
+
+ppc_stat_plots <- function(mod, simulations, term = "condition", type = "fixed", stats = c("min", "max", "mean", "sd"), n_cols = 2, max_cols_per_plot = 5) {
+  
+  n_unique <- n_distinct(insight::get_data(mod)[[term]])
+  
+  if(type %in% c("fixed", "fe")) .term <- insight::get_predictors(mod)[[term]]
+  else if(type %in% c("random", "re")) .term <- insight::get_random(mod)[[term]]
+  
+  return(
+    patchwork::wrap_plots(
+      purrr::map(
+        stats, 
+        \(.x) bayesplot::ppc_stat_grouped(
+          insight::get_response(mod), 
+          simulations, group = .term, stat = .x,
+          facet_args = list(ncol = min(max_cols_per_plot, n_unique))
+        ) + scale_x_continuous(labels = \(l) signif(l, digits = 2))
+      ), 
+      ncol = n_cols, guides = 'auto'
+    ) + 
+      # plot_annotation(title = "Simulation-based Predictive Checks (on statistics)", subtitle = str_glue("For [{term}]")) & 
+      theme(legend.position = 'right', axis.text.x = element_text(size = rel(1.5), angle = 30, hjust = 1))
   )
 }
