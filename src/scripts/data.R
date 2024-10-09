@@ -101,7 +101,11 @@ load_clearing_data <- function(path = configs$data$IHC$clearing_raw) {
   clearing_data <- clearing_data |>
     select(-contains("__")) |>
     janitor::clean_names() |> 
-    mutate(across(c(condition, stage), \(x) to_factor(x)))
+    mutate(across(c(condition, stage), \(x) to_factor(x))) |> 
+    mutate(
+      volume = volume / 1e6,
+      
+    )
   
   # Data checks (TODO: move to their own function)
   cerebellar_values_not_equal <- clearing_data |> 
