@@ -1838,15 +1838,551 @@ make_signif_boxplot(mod_numends_nbinom_tot, xaxis = "condition", facet = "stage"
 ## 10. Segment Partitioning
 ***
 
+<!----------------------------------------------------------------------------->
+### Models
+
+**Gamma**
+
+```{r}
+mod_seg_part_gamma_tot <- glmmTMB(
+  segment_partitioning ~ condition * stage + offset(log(cerebellar_volume)) + (1 | mouse),
+  family = Gamma("log"),
+  data = clearing_total,
+  REML = TRUE
+)
+
+cli_h1("[Parameters]")
+parameters(mod_seg_part_gamma_tot)
+cli_h1("[Fitness]")
+performance(mod_seg_part_gamma_tot)
+```
+
+<!----------------------------------------------------------------------------->
+### Model Diagnostics
+
+#### Residual diagnostics
+
+```{r fig.width = 10}
+check_model(mod_seg_part_gamma_tot)
+
+make_acf_plot(mod_seg_part_gamma_tot)
+```
+
+#### Predictive checks
+
+```{r}
+mod_seg_part_gamma_tot_dharma <- DHARMa::simulateResiduals(mod_seg_part_gamma_tot, plot = FALSE, n = 300, seed = getOption("seed"))
+mod_seg_part_gamma_tot_dharma_t <- t(mod_seg_part_gamma_tot_dharma$simulatedResponse)
+```
+
+```{r fig.width = 10}
+ppc_plots(mod_seg_part_gamma_tot, simulations = mod_seg_part_gamma_tot_dharma_t, term = "condition")
+ppc_plots(mod_seg_part_gamma_tot, simulations = mod_seg_part_gamma_tot_dharma_t, term = "stage")
+```
+
+```{r fig.width = 10}
+ppc_stat_plots(mod_seg_part_gamma_tot, simulations = mod_seg_part_gamma_tot_dharma_t, term = "condition")
+ppc_stat_plots(mod_seg_part_gamma_tot, simulations = mod_seg_part_gamma_tot_dharma_t, term = "stage")
+```
+
+#### Potential outliers
+
+```{r}
+get_model_based_outliers(clearing_total, mod_seg_part_gamma_tot, mod_seg_part_gamma_tot_dharma, clearing_responses)
+```
+
+<!----------------------------------------------------------------------------->
+### Model Analysis
+
+#### Model parameters
+
+**All effects (Wald):**
+
+```{r}
+parameters(
+  mod_seg_part_gamma_tot, exponentiate = should_exp(mod_seg_part_gamma_tot),
+  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+)
+```
+
+**Main effects (Wald):**
+
+```{r}
+car::Anova(mod_seg_part_gamma_tot, type = 3)
+```
+
+#### Marginal means
+
+**Condition**
+
+```{r}
+cli_h1("[Observed]")
+
+distribution_summary(get_data(mod_seg_part_gamma_tot), dvs = find_response(mod_seg_part_gamma_tot), between = "condition")
+
+cli_h1("[Emmeans]")
+
+emmeans(mod_seg_part_gamma_tot, specs = "condition", type = "response")
+```
+
+**Stage**
+
+```{r}
+cli_h1("[Observed]")
+
+distribution_summary(get_data(mod_seg_part_gamma_tot), dvs = find_response(mod_seg_part_gamma_tot), between = "stage")
+
+cli_h1("[Emmeans]")
+
+emmeans(mod_seg_part_gamma_tot, specs = "stage", type = "response")
+```
+
+**Condition:Stage**
+
+```{r}
+cli_h1("[Observed]")
+
+distribution_summary(get_data(mod_seg_part_gamma_tot), dvs = find_response(mod_seg_part_gamma_tot), between = c("condition", "stage"))
+
+cli_h1("[Emmeans]")
+
+emmeans(mod_seg_part_gamma_tot, specs = ~ condition | stage, type = "response")
+```
+
+#### Contrasts
+
+**Condition**
+
+```{r}
+cli_h1("[Link scale]")
+
+emmeans(mod_seg_part_gamma_tot, specs = "condition", type = "response") |> 
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+
+cli_h1("[Response scale]")
+
+emmeans(mod_seg_part_gamma_tot, specs = "condition", regrid = "response") |>
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+```
+
+```{r fig.width = 4, fig.height = 7}
+make_signif_boxplot(mod_seg_part_gamma_tot, xaxis = "condition")
+```
+
+**Stage**
+
+```{r}
+cli_h1("[Link scale]")
+
+emmeans(mod_seg_part_gamma_tot, specs = "stage", type = "response") |> 
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+
+cli_h1("[Response scale]")
+
+emmeans(mod_seg_part_gamma_tot, specs = "stage", regrid = "response") |>
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+```
+
+```{r fig.width = 4, fig.height = 7}
+make_signif_boxplot(mod_seg_part_gamma_tot, xaxis = "stage")
+```
+
+**Condition:Stage**
+
+```{r}
+cli_h1("[Link scale]")
+
+emmeans(mod_seg_part_gamma_tot, specs = ~ condition | stage, type = "response") |> 
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+
+cli_h2("[Interaction]")
+
+emmeans(mod_seg_part_gamma_tot, specs = ~ condition | stage, type = "response") |>
+  contrast(interaction = "pairwise", by = NULL, adjust = "none", infer = TRUE)
+
+cli_h1("[Response scale]")
+
+emmeans(mod_seg_part_gamma_tot, specs = ~ condition | stage, regrid = "response") |>
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+
+cli_h2("[Interaction]")
+
+emmeans(mod_seg_part_gamma_tot, specs = ~ condition | stage, regrid = "response") |>
+  contrast(interaction = "pairwise", by = NULL, adjust = "none", infer = TRUE)
+```
+
+```{r fig.width = 14, fig.height = 6}
+make_signif_boxplot(mod_seg_part_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) |> 
+  save_png("mod_seg_part_gamma_tot", subfolder = "IHC", width = 14, height = 6, display = TRUE)
+```
+
 
 <!----------------------------------------------------------------------------->
 ## 11. Mean Segment Radius
 ***
 
+<!----------------------------------------------------------------------------->
+### Models
+
+**Gamma**
+
+```{r}
+mod_seg_rad_gamma_tot <- glmmTMB(
+  mean_segment_radius ~ condition * stage + offset(log(cerebellar_volume)) + (1 | mouse),
+  family = Gamma("log"),
+  data = clearing_total,
+  REML = TRUE
+)
+
+cli_h1("[Parameters]")
+parameters(mod_seg_rad_gamma_tot)
+cli_h1("[Fitness]")
+performance(mod_seg_rad_gamma_tot)
+```
+
+<!----------------------------------------------------------------------------->
+### Model Diagnostics
+
+#### Residual diagnostics
+
+```{r fig.width = 10}
+check_model(mod_seg_rad_gamma_tot)
+
+make_acf_plot(mod_seg_rad_gamma_tot)
+```
+
+#### Predictive checks
+
+```{r}
+mod_seg_rad_gamma_tot_dharma <- DHARMa::simulateResiduals(mod_seg_rad_gamma_tot, plot = FALSE, n = 300, seed = getOption("seed"))
+mod_seg_rad_gamma_tot_dharma_t <- t(mod_seg_rad_gamma_tot_dharma$simulatedResponse)
+```
+
+```{r fig.width = 10}
+ppc_plots(mod_seg_rad_gamma_tot, simulations = mod_seg_rad_gamma_tot_dharma_t, term = "condition")
+ppc_plots(mod_seg_rad_gamma_tot, simulations = mod_seg_rad_gamma_tot_dharma_t, term = "stage")
+```
+
+```{r fig.width = 10}
+ppc_stat_plots(mod_seg_rad_gamma_tot, simulations = mod_seg_rad_gamma_tot_dharma_t, term = "condition")
+ppc_stat_plots(mod_seg_rad_gamma_tot, simulations = mod_seg_rad_gamma_tot_dharma_t, term = "stage")
+```
+
+#### Potential outliers
+
+```{r}
+get_model_based_outliers(clearing_total, mod_seg_rad_gamma_tot, mod_seg_rad_gamma_tot_dharma, clearing_responses)
+```
+
+<!----------------------------------------------------------------------------->
+### Model Analysis
+
+#### Model parameters
+
+**All effects (Wald):**
+
+```{r}
+parameters(
+  mod_seg_rad_gamma_tot, exponentiate = should_exp(mod_seg_rad_gamma_tot),
+  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+)
+```
+
+**Main effects (Wald):**
+
+```{r}
+car::Anova(mod_seg_rad_gamma_tot, type = 3)
+```
+
+#### Marginal means
+
+**Condition**
+
+```{r}
+cli_h1("[Observed]")
+
+distribution_summary(get_data(mod_seg_rad_gamma_tot), dvs = find_response(mod_seg_rad_gamma_tot), between = "condition")
+
+cli_h1("[Emmeans]")
+
+emmeans(mod_seg_rad_gamma_tot, specs = "condition", type = "response")
+```
+
+**Stage**
+
+```{r}
+cli_h1("[Observed]")
+
+distribution_summary(get_data(mod_seg_rad_gamma_tot), dvs = find_response(mod_seg_rad_gamma_tot), between = "stage")
+
+cli_h1("[Emmeans]")
+
+emmeans(mod_seg_rad_gamma_tot, specs = "stage", type = "response")
+```
+
+**Condition:Stage**
+
+```{r}
+cli_h1("[Observed]")
+
+distribution_summary(get_data(mod_seg_rad_gamma_tot), dvs = find_response(mod_seg_rad_gamma_tot), between = c("condition", "stage"))
+
+cli_h1("[Emmeans]")
+
+emmeans(mod_seg_rad_gamma_tot, specs = ~ condition | stage, type = "response")
+```
+
+#### Contrasts
+
+**Condition**
+
+```{r}
+cli_h1("[Link scale]")
+
+emmeans(mod_seg_rad_gamma_tot, specs = "condition", type = "response") |> 
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+
+cli_h1("[Response scale]")
+
+emmeans(mod_seg_rad_gamma_tot, specs = "condition", regrid = "response") |>
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+```
+
+```{r fig.width = 4, fig.height = 7}
+make_signif_boxplot(mod_seg_rad_gamma_tot, xaxis = "condition")
+```
+
+**Stage**
+
+```{r}
+cli_h1("[Link scale]")
+
+emmeans(mod_seg_rad_gamma_tot, specs = "stage", type = "response") |> 
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+
+cli_h1("[Response scale]")
+
+emmeans(mod_seg_rad_gamma_tot, specs = "stage", regrid = "response") |>
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+```
+
+```{r fig.width = 4, fig.height = 7}
+make_signif_boxplot(mod_seg_rad_gamma_tot, xaxis = "stage")
+```
+
+**Condition:Stage**
+
+```{r}
+cli_h1("[Link scale]")
+
+emmeans(mod_seg_rad_gamma_tot, specs = ~ condition | stage, type = "response") |> 
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+
+cli_h2("[Interaction]")
+
+emmeans(mod_seg_rad_gamma_tot, specs = ~ condition | stage, type = "response") |>
+  contrast(interaction = "pairwise", by = NULL, adjust = "none", infer = TRUE)
+
+cli_h1("[Response scale]")
+
+emmeans(mod_seg_rad_gamma_tot, specs = ~ condition | stage, regrid = "response") |>
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+
+cli_h2("[Interaction]")
+
+emmeans(mod_seg_rad_gamma_tot, specs = ~ condition | stage, regrid = "response") |>
+  contrast(interaction = "pairwise", by = NULL, adjust = "none", infer = TRUE)
+```
+
+```{r fig.width = 14, fig.height = 6}
+make_signif_boxplot(mod_seg_rad_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) |> 
+  save_png("mod_seg_rad_gamma_tot", subfolder = "IHC", width = 14, height = 6, display = TRUE)
+```
+
 
 <!----------------------------------------------------------------------------->
 ## 12. Mean Segment Tortuosity
 ***
+
+<!----------------------------------------------------------------------------->
+### Models
+
+**Gamma**
+
+```{r}
+mod_seg_tort_gamma_tot <- glmmTMB(
+  mean_segment_tortuosity ~ condition * stage + offset(log(cerebellar_volume)) + (1 | mouse),
+  family = Gamma("log"),
+  data = clearing_total,
+  REML = TRUE
+)
+
+cli_h1("[Parameters]")
+parameters(mod_seg_tort_gamma_tot)
+cli_h1("[Fitness]")
+performance(mod_seg_tort_gamma_tot)
+```
+
+<!----------------------------------------------------------------------------->
+### Model Diagnostics
+
+#### Residual diagnostics
+
+```{r fig.width = 10}
+check_model(mod_seg_tort_gamma_tot)
+
+make_acf_plot(mod_seg_tort_gamma_tot)
+```
+
+#### Predictive checks
+
+```{r}
+mod_seg_tort_gamma_tot_dharma <- DHARMa::simulateResiduals(mod_seg_tort_gamma_tot, plot = FALSE, n = 300, seed = getOption("seed"))
+mod_seg_tort_gamma_tot_dharma_t <- t(mod_seg_tort_gamma_tot_dharma$simulatedResponse)
+```
+
+```{r fig.width = 10}
+ppc_plots(mod_seg_tort_gamma_tot, simulations = mod_seg_tort_gamma_tot_dharma_t, term = "condition")
+ppc_plots(mod_seg_tort_gamma_tot, simulations = mod_seg_tort_gamma_tot_dharma_t, term = "stage")
+```
+
+```{r fig.width = 10}
+ppc_stat_plots(mod_seg_tort_gamma_tot, simulations = mod_seg_tort_gamma_tot_dharma_t, term = "condition")
+ppc_stat_plots(mod_seg_tort_gamma_tot, simulations = mod_seg_tort_gamma_tot_dharma_t, term = "stage")
+```
+
+#### Potential outliers
+
+```{r}
+get_model_based_outliers(clearing_total, mod_seg_tort_gamma_tot, mod_seg_tort_gamma_tot_dharma, clearing_responses)
+```
+
+<!----------------------------------------------------------------------------->
+### Model Analysis
+
+#### Model parameters
+
+**All effects (Wald):**
+
+```{r}
+parameters(
+  mod_seg_tort_gamma_tot, exponentiate = should_exp(mod_seg_tort_gamma_tot),
+  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+)
+```
+
+**Main effects (Wald):**
+
+```{r}
+car::Anova(mod_seg_tort_gamma_tot, type = 3)
+```
+
+#### Marginal means
+
+**Condition**
+
+```{r}
+cli_h1("[Observed]")
+
+distribution_summary(get_data(mod_seg_tort_gamma_tot), dvs = find_response(mod_seg_tort_gamma_tot), between = "condition")
+
+cli_h1("[Emmeans]")
+
+emmeans(mod_seg_tort_gamma_tot, specs = "condition", type = "response")
+```
+
+**Stage**
+
+```{r}
+cli_h1("[Observed]")
+
+distribution_summary(get_data(mod_seg_tort_gamma_tot), dvs = find_response(mod_seg_tort_gamma_tot), between = "stage")
+
+cli_h1("[Emmeans]")
+
+emmeans(mod_seg_tort_gamma_tot, specs = "stage", type = "response")
+```
+
+**Condition:Stage**
+
+```{r}
+cli_h1("[Observed]")
+
+distribution_summary(get_data(mod_seg_tort_gamma_tot), dvs = find_response(mod_seg_tort_gamma_tot), between = c("condition", "stage"))
+
+cli_h1("[Emmeans]")
+
+emmeans(mod_seg_tort_gamma_tot, specs = ~ condition | stage, type = "response")
+```
+
+#### Contrasts
+
+**Condition**
+
+```{r}
+cli_h1("[Link scale]")
+
+emmeans(mod_seg_tort_gamma_tot, specs = "condition", type = "response") |> 
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+
+cli_h1("[Response scale]")
+
+emmeans(mod_seg_tort_gamma_tot, specs = "condition", regrid = "response") |>
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+```
+
+```{r fig.width = 4, fig.height = 7}
+make_signif_boxplot(mod_seg_tort_gamma_tot, xaxis = "condition")
+```
+
+**Stage**
+
+```{r}
+cli_h1("[Link scale]")
+
+emmeans(mod_seg_tort_gamma_tot, specs = "stage", type = "response") |> 
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+
+cli_h1("[Response scale]")
+
+emmeans(mod_seg_tort_gamma_tot, specs = "stage", regrid = "response") |>
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+```
+
+```{r fig.width = 4, fig.height = 7}
+make_signif_boxplot(mod_seg_tort_gamma_tot, xaxis = "stage")
+```
+
+**Condition:Stage**
+
+```{r}
+cli_h1("[Link scale]")
+
+emmeans(mod_seg_tort_gamma_tot, specs = ~ condition | stage, type = "response") |> 
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+
+cli_h2("[Interaction]")
+
+emmeans(mod_seg_tort_gamma_tot, specs = ~ condition | stage, type = "response") |>
+  contrast(interaction = "pairwise", by = NULL, adjust = "none", infer = TRUE)
+
+cli_h1("[Response scale]")
+
+emmeans(mod_seg_tort_gamma_tot, specs = ~ condition | stage, regrid = "response") |>
+  contrast(method = "pairwise", adjust = "none", infer = TRUE)
+
+cli_h2("[Interaction]")
+
+emmeans(mod_seg_tort_gamma_tot, specs = ~ condition | stage, regrid = "response") |>
+  contrast(interaction = "pairwise", by = NULL, adjust = "none", infer = TRUE)
+```
+
+```{r fig.width = 14, fig.height = 6}
+make_signif_boxplot(mod_seg_tort_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) |> 
+  save_png("mod_seg_tort_gamma_tot", subfolder = "IHC", width = 14, height = 6, display = TRUE)
+```
+
+
 
 <!----------------------------------------------------------------------------->
 <!----------------------------------------------------------------------------->
