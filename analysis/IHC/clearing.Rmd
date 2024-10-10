@@ -2601,7 +2601,7 @@ emmeans(mod_vol_gamma_ds, specs = "level", regrid = "response") |>
 make_signif_boxplot(mod_vol_gamma_ds, xaxis = "level")
 ```
 
-**Condition * Level |Stage**
+**Condition * Level | Stage**
 
 ```{r}
 cli_h1("[Link scale]")
@@ -2634,7 +2634,7 @@ make_signif_boxplot(mod_vol_gamma_ds, xaxis = "condition", facet = "stage", ncol
 
 Levels separated:
 
-```{r}
-make_signif_boxplot_inter(mod_vol_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4)
+```{r fig.height = 8, fig.width = 14}
+make_signif_boxplot_inter(mod_vol_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) |> 
   save_png("mod_vol_gamma_ds_inter", subfolder = "IHC", width = 14, height = 6)
 ```
