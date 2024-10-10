@@ -2509,31 +2509,7 @@ cli_h1("[Emmeans]")
 emmeans(mod_vol_gamma_ds, specs = "level", type = "response")
 ```
 
-**Condition:Stage**
-
-```{r}
-cli_h1("[Observed]")
-
-distribution_summary(get_data(mod_vol_gamma_ds), dvs = find_response(mod_vol_gamma_ds), between = c("condition", "stage"))
-
-cli_h1("[Emmeans]")
-
-emmeans(mod_vol_gamma_ds, specs = ~ condition | stage, type = "response")
-```
-
-**Condition:Level**
-
-```{r}
-cli_h1("[Observed]")
-
-distribution_summary(get_data(mod_vol_gamma_ds), dvs = find_response(mod_vol_gamma_ds), between = c("condition", "level"))
-
-cli_h1("[Emmeans]")
-
-emmeans(mod_vol_gamma_ds, specs = ~ condition | level, type = "response")
-```
-
-**Condition:Stage:Level**
+**Condition:Level | Stage**
 
 ```{r}
 cli_h1("[Observed]")
@@ -2542,7 +2518,7 @@ distribution_summary(get_data(mod_vol_gamma_ds), dvs = find_response(mod_vol_gam
 
 cli_h1("[Emmeans]")
 
-emmeans(mod_vol_gamma_ds, specs = ~ condition * stage * level, type = "response")
+emmeans(mod_vol_gamma_ds, specs = ~ condition | level, by = "stage", type = "response")
 ```
 
 #### Contrasts
@@ -2606,26 +2582,26 @@ make_signif_boxplot(mod_vol_gamma_ds, xaxis = "level")
 ```{r}
 cli_h1("[Link scale]")
 
-emmeans(mod_vol_gamma_ds, specs = ~ condition * level | stage, type = "response") |> 
+emmeans(mod_vol_gamma_ds, specs = ~ condition | level, by = "stage", type = "response") |> 
   contrast(method = "pairwise", adjust = "none", infer = TRUE)
 
 cli_h2("[Interaction]")
 
-emmeans(mod_vol_gamma_ds, specs = ~ condition * level | stage, type = "response") |>
-  contrast(interaction = "pairwise", by = NULL, adjust = "none", infer = TRUE)
+emmeans(mod_vol_gamma_ds, specs = ~ condition | level, by = "stage", type = "response") |>
+  contrast(interaction = "pairwise", by = "stage", adjust = "none", infer = TRUE)
 
 cli_h1("[Response scale]")
 
-emmeans(mod_vol_gamma_ds, specs = ~ condition * level | stage, regrid = "response") |>
+emmeans(mod_vol_gamma_ds, specs = ~ condition | level, by = "stage", regrid = "response") |>
   contrast(method = "pairwise", adjust = "none", infer = TRUE)
 
 cli_h2("[Interaction]")
 
-emmeans(mod_vol_gamma_ds, specs = ~ condition * level | stage, regrid = "response") |>
-  contrast(interaction = "pairwise", by = NULL, adjust = "none", infer = TRUE)
+emmeans(mod_vol_gamma_ds, specs = ~ condition | level, by = "stage", regrid = "response") |>
+  contrast(interaction = "pairwise", by = "stage", adjust = "none", infer = TRUE)
 ```
 
-Levels combined:
+Levels combined (equivalent to "Total"):
 
 ```{r fig.width = 14, fig.height = 6}
 make_signif_boxplot(mod_vol_gamma_ds, xaxis = "condition", facet = "stage", ncol = 4) |> 
@@ -2634,7 +2610,7 @@ make_signif_boxplot(mod_vol_gamma_ds, xaxis = "condition", facet = "stage", ncol
 
 Levels separated:
 
-```{r fig.height = 8, fig.width = 14}
-make_signif_boxplot_inter(mod_vol_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) |> 
+```{r fig.height = 6, fig.width = 14}
+make_signif_boxplot_inter(mod_vol_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 5) |> 
   save_png("mod_vol_gamma_ds_inter", subfolder = "IHC", width = 14, height = 6)
 ```

@@ -192,11 +192,15 @@ make_signif_boxplot_inter <- function(
     else resp_name <- get_response_name(resp)
   }
   
-  ## Making sure the variables of interest are contrasts for emmeans
+  ## Making sure the variables of interest are factors for emmeans
   dat <- dat |> mutate(across(c(any_of(c(pred1, pred2)) & where(\(c) !is.factor(c))), as.factor))
   
-  extra_dat <- dat |> group_by(across(any_of(c(pred1, pred2)))) |> summarize(N = str_glue("N = {get_n_units(pick(everything()))}")) |> ungroup()
+  extra_dat <- dat |> 
+    group_by(across(any_of(c(pred1, pred2, facet))), .drop = TRUE) |> 
+    summarize(N = str_glue("N = {get_n_units(pick(everything()))}")) |> 
+    ungroup()
   
+  # TODO: should be computed by facet
   max <- max(dat[[resp]])
   min <- min(dat[[resp]])
   amp <- abs(max - min)
@@ -204,10 +208,19 @@ make_signif_boxplot_inter <- function(
   # -----------[ Contrasts ]----------- #
   
   specs <- paste0(" ~ ", pred1)
-  if(!is.null(pred2)) specs <- paste0(specs, " | ", pred2)
+  if (!is.null(pred2)) specs <- paste0(specs, " | ", pred2)
+  # specs <- case_when(
+  #   is.null(pred2) && !is.null(facet) ~ paste0(specs, " | ", facet),
+  #   !is.null(pred2) && is.null(facet) ~ paste0(specs, " | ", pred2),
+  #   !is.null(pred2) && !is.null(facet) ~ paste0(specs, " | ", pred2, " * ", facet),
+  #   .default = specs
+  # )
   specs <- as.formula(specs)
   
-  emmeans <- emmeans::emmeans(mod, specs = specs, type = "response", data = insight::get_data(mod))
+  emmeans <- emmeans::emmeans(
+    mod, specs = specs, type = "response", 
+    by = facet, data = mutate(insight::get_data(mod), across(any_of(c(facet)), as.character))
+  )
   if (tolower(scale) %in% c("response", "resp")) emmeans <- regrid(emmeans, transform = "response")
   
   contrasts <- emmeans::contrast(emmeans, method = "pairwise", adjust = adjust, infer = TRUE) |> 
@@ -216,7 +229,7 @@ make_signif_boxplot_inter <- function(
     tidyr::extract(col = Contrast, into = c("X1", "X2"), regex = "(.*) [- | /] (.*)", remove = FALSE)
   
   p_data_contrasts <- contrasts |>
-    group_by(across(any_of(c(pred2)))) |>
+    group_by(across(any_of(c(pred2, facet)))) |>
     mutate(
       x1 = (match(.data[[pred2]], levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(X1, levels(dat[[pred1]])),
       x2 = (match(.data[[pred2]], levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(X2, levels(dat[[pred1]])),
@@ -230,17 +243,18 @@ make_signif_boxplot_inter <- function(
     ) |>
     ungroup()
   
-  contrasts_interactions <- emmeans::contrast(emmeans, interaction = c("pairwise"), by = NULL, adjust = "none", infer = TRUE) |> 
+  contrasts_interactions <- emmeans::contrast(emmeans, interaction = c("pairwise"), by = facet, adjust = "none", infer = TRUE) |> 
     as.data.frame() |> 
-    tidyr::extract(col = paste0(pred1, "_pairwise"), into = c("X1", "X2"), regex = "(.*) [- | /] (.*)", remove = FALSE) |> 
-    tidyr::extract(col = paste0(pred2, "_pairwise"), into = c("F1", "F2"), regex = "(.*) [- | /] (.*)", remove = FALSE)
+    tidyr::extract(col = paste0(pred1, "_pairwise"), into = c("pred1_1", "pred1_2"), regex = "(.*) [- | /] (.*)", remove = FALSE) |> 
+    tidyr::extract(col = paste0(pred2, "_pairwise"), into = c("pred2_1", "pred2_2"), regex = "(.*) [- | /] (.*)", remove = FALSE)
   
   p_data_interactions <- contrasts_interactions |>
+    group_by(across(any_of(c(facet)))) |>
     mutate(
-      x1 = 0.5 * ((match(F1, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(X1, levels(dat[[pred1]])) +
-                    (match(F1, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(X2, levels(dat[[pred1]]))),
-      x2 = 0.5 * ((match(F2, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(X1, levels(dat[[pred1]])) +
-                    (match(F2, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(X2, levels(dat[[pred1]]))),
+      x1 = 0.5 * ((match(pred2_1, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(pred1_1, levels(dat[[pred1]])) +
+                    (match(pred2_1, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(pred1_2, levels(dat[[pred1]]))),
+      x2 = 0.5 * ((match(pred2_2, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(pred1_1, levels(dat[[pred1]])) +
+                    (match(pred2_2, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(pred1_2, levels(dat[[pred1]]))),
       p.signif = label_pval(p.value)
     ) |>
     arrange(x.diff := abs(x2 - x1)) |>
@@ -248,7 +262,8 @@ make_signif_boxplot_inter <- function(
       step = 1:n() + choose(length(unique(dat[[pred1]])), 2),
       pos.x = (x2 + x1) * 0.5,
       pos.y = max + step * 0.1 * (max - min)
-    )
+    ) |>
+    ungroup()
   
   # -----------[ Plot ]----------- #
   
@@ -272,7 +287,6 @@ make_signif_boxplot_inter <- function(
         size = 3, shape = 23, color = color_text, alpha = 0.9, position = position_dodge(0.2)
       )
     }
-    #+ ggrepel::geom_text_repel(aes(label = mouse), color = "black")
     + geom_errorbarh(
       data = p_data_contrasts, aes(xmin = paste(X1, .data[[pred2]], sep = "_"), xmax = paste(X2, .data[[pred2]], sep = "_"), y = pos.y), inherit.aes = FALSE,
       color = "black", height = 0.02 * amp, size = 0.5
