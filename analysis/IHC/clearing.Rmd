@@ -741,7 +741,7 @@ make_signif_boxplot(mod_area_gamma_tot, xaxis = "condition", facet = "stage", nc
 
 ```{r}
 mod_seg_vol_gamma_tot <- glmmTMB(
-  mean_segment_volume ~ condition * stage + offset(log(cerebellar_volume)) + (1 | mouse),
+  mean_segment_volume ~ condition * stage + (1 | mouse),
   family = Gamma("log"),
   data = clearing_total,
   REML = TRUE
@@ -924,7 +924,7 @@ make_signif_boxplot(mod_seg_vol_gamma_tot, xaxis = "condition", facet = "stage",
 
 ```{r}
 mod_seg_length_gamma_tot <- glmmTMB(
-  mean_segment_length ~ condition * stage + offset(log(cerebellar_volume)) + (1 | mouse),
+  mean_segment_length ~ condition * stage + (1 | mouse),
   family = Gamma("log"),
   data = clearing_total,
   REML = TRUE
@@ -1107,7 +1107,7 @@ make_signif_boxplot(mod_seg_length_gamma_tot, xaxis = "condition", facet = "stag
 
 ```{r}
 mod_seg_area_gamma_tot <- glmmTMB(
-  mean_segment_surface_area ~ condition * stage + offset(log(cerebellar_volume)) + (1 | mouse),
+  mean_segment_surface_area ~ condition * stage + (1 | mouse),
   family = Gamma("log"),
   data = clearing_total,
   REML = TRUE
@@ -1845,7 +1845,7 @@ make_signif_boxplot(mod_numends_nbinom_tot, xaxis = "condition", facet = "stage"
 
 ```{r}
 mod_seg_part_gamma_tot <- glmmTMB(
-  segment_partitioning ~ condition * stage + offset(log(cerebellar_volume)) + (1 | mouse),
+  segment_partitioning ~ condition * stage + (1 | mouse),
   family = Gamma("log"),
   data = clearing_total,
   REML = TRUE
@@ -2028,7 +2028,7 @@ make_signif_boxplot(mod_seg_part_gamma_tot, xaxis = "condition", facet = "stage"
 
 ```{r}
 mod_seg_rad_gamma_tot <- glmmTMB(
-  mean_segment_radius ~ condition * stage + offset(log(cerebellar_volume)) + (1 | mouse),
+  mean_segment_radius ~ condition * stage + (1 | mouse),
   family = Gamma("log"),
   data = clearing_total,
   REML = TRUE
@@ -2211,7 +2211,7 @@ make_signif_boxplot(mod_seg_rad_gamma_tot, xaxis = "condition", facet = "stage",
 
 ```{r}
 mod_seg_tort_gamma_tot <- glmmTMB(
-  mean_segment_tortuosity ~ condition * stage + offset(log(cerebellar_volume)) + (1 | mouse),
+  mean_segment_tortuosity ~ condition * stage + (1 | mouse),
   family = Gamma("log"),
   data = clearing_total,
   REML = TRUE
