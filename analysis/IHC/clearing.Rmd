@@ -5054,3 +5054,23 @@ Levels separated:
 make_signif_boxplot_inter(mod_numends_nbinom_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 5) |> 
   save_png("mod_numends_nbinom_ds_inter", subfolder = "IHC", width = 14, height = 6)
 ```
+
+
+<!----------------------------------------------------------------------------->
+<!----------------------------------------------------------------------------->
+## IV. Combined Plots
+***
+
+```{r fig.height = 17, fig.width = 14}
+
+#Figure 1:
+
+no_strip <- theme(strip.text = element_blank(), strip.background = element_blank())
+
+make_signif_boxplot(mod_vol_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) /
+  (make_signif_boxplot(mod_length_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) /
+  (make_signif_boxplot(mod_area_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) +
+   plot_layout(axes = "collect")
+  
+  
+```
