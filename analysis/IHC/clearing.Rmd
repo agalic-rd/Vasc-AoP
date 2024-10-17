@@ -5061,16 +5061,57 @@ make_signif_boxplot_inter(mod_numends_nbinom_ds, pred1 = "condition", pred2 = "l
 ## IV. Combined Plots
 ***
 
-```{r fig.height = 17, fig.width = 14}
+<!----------------------------------------------------------------------------->
+## 1. Figure 1
+***
 
-#Figure 1:
+```{r fig.height = 17, fig.width = 14}
 
 no_strip <- theme(strip.text = element_blank(), strip.background = element_blank())
 
-make_signif_boxplot(mod_vol_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) /
+(make_signif_boxplot(mod_vol_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) /
   (make_signif_boxplot(mod_length_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) /
   (make_signif_boxplot(mod_area_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) +
-   plot_layout(axes = "collect")
+   plot_layout(axes = "collect")) |> 
+  save_png("Fig1", subfolder = "IHC", width = 14, height = 17)
+  
+  
+```
+<!----------------------------------------------------------------------------->
+## 2. Figure 2
+***
+
+```{r fig.height = 20, fig.width = 14}
+
+no_strip <- theme(strip.text = element_blank(), strip.background = element_blank())
+
+(make_signif_boxplot(mod_numseg_nbinom_tot, xaxis = "condition", facet = "stage", ncol = 4) /
+  (make_signif_boxplot(mod_numbranch_nbinom_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) /
+  (make_signif_boxplot(mod_numends_nbinom_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) /
+  (make_signif_boxplot(mod_seg_part_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) /
+  (make_signif_boxplot(mod_seg_tort_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) 
+    +
+   plot_layout(axes = "collect")) |> 
+  save_png ("Fig2", subfolder = "IHC", width = 14, height = 20)
+  
+  
+```
+
+<!----------------------------------------------------------------------------->
+## 3. Figure 3
+***
+
+```{r fig.height = 20, fig.width = 14}
+
+no_strip <- theme(strip.text = element_blank(), strip.background = element_blank())
+
+(make_signif_boxplot(mod_seg_vol_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) /
+  (make_signif_boxplot(mod_seg_area_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) /
+  (make_signif_boxplot(mod_seg_length_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) /
+  (make_signif_boxplot(mod_seg_rad_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) 
+    +
+   plot_layout(axes = "collect")) |> 
+  save_png ("Fig3", subfolder = "IHC", width = 14, height = 20)
   
   
 ```
