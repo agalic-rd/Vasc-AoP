@@ -424,7 +424,7 @@ make_heatmap <- function(data, xaxis, facet) {
       axis.text.y = element_text(hjust = 0),
       axis.ticks = element_line(linewidth = 0.4)
     )
-    + labs(x = xaxis, y = "")
+    + labs(x = stringr::str_to_title(xaxis), y = "")
   )
 }
 
