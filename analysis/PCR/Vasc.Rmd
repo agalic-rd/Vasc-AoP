@@ -113,49 +113,37 @@ To get a better idea of how each `Gene`'s regulation changes through time, we ca
 ## Temporo-functional heatmap
 
 ```{r fig.height = 8, fig.width = 15}
-((vasc_data$predictions |>
+heatmap_data <- vasc_data$predictions |>
   filter(p_value <= .05) |>
   left_join(supplementary_data$gene_data$fx, by = "gene", relationship = "many-to-many") |>
   select(stage, gene, fold, p_value, fx, effect, abb) |> 
-  make_heatmap(xaxis = "abb", facet = "stage")) + labs(x = "Function")
-) |> save_png("vasc_heatmap", subfolder = "PCR", height = 8, width = 15)
+  mutate(tile_label = paste(round(fold, 2), stars.pval(p_value), sep = " "))
+
+heatmap_plot <- make_heatmap(heatmap_data, xaxis = "abb", facet = "stage") + 
+  labs(x = "Function")
+
+save_png(heatmap_plot, "vasc_heatmap", subfolder = "PCR", height = 8, width = 15)
 ```
 
-# Sankey
+With effects:
 
-```{r}
-# Library
-library(networkD3)
-library(dplyr)
+```{r fig.height = 8, fig.width = 18}
+heatmap_data_effect <- vasc_data$predictions |>
+  filter(p_value <= .05) |>
+  left_join(supplementary_data$gene_data$fx, by = "gene", relationship = "many-to-many") |>
+  select(stage, gene, fold, p_value, fx, effect, abb) |> 
+  mutate(
+    tile_label = paste(
+      round(fold, 2), 
+      stars.pval(p_value), 
+      ifelse(effect == "positive", "➕", "➖"), 
+      sep = " "
+    )
+  )
 
-# Make a connection data frame
-links <- data.frame(
-  source = c("group_A","group_A", "group_B", "group_C", "group_C", "group_E"), 
-  target = c("group_C","group_D", "group_E", "group_F", "group_G", "group_H"), 
-  value = c(2,3, 2, 3, 1, 3)
-)
- 
-# From these flows we need to create a node data frame: it lists every entities involved in the flow
-nodes <- data.frame(
-  name=c(as.character(links$source), as.character(links$target)) %>% 
-    unique()
-)
+heatmap_plot_effect <- make_heatmap(heatmap_data_effect, xaxis = "abb", facet = "stage") + 
+  labs(x = "Function", caption = "➕ Positive effect | ➖ Negative effect") + 
+  theme(plot.caption = element_text(hjust = 0.5, vjust = 0.5, face = "bold", size = 16))
 
-# With networkD3, connection must be provided using id, not using real name like in the links dataframe.. So we need to reformat it.
-links$IDsource <- match(links$source, nodes$name)-1 
-links$IDtarget <- match(links$target, nodes$name)-1
- 
-# prepare color scale: I give one specific color for each node.
-my_color <- 'd3.scaleOrdinal() .domain(["group_A", "group_B","group_C", "group_D", "group_E", "group_F", "group_G", "group_H"]) .range(["blue", "blue" , "blue", "red", "red", "yellow", "purple", "purple"])'
- 
-# Make the Network. I call my colour scale with the colourScale argument
-p <- sankeyNetwork(Links = links, Nodes = nodes, Source = "IDsource", Target = "IDtarget", 
-              Value = "value", NodeID = "name", colourScale=my_color)
-p
-
-# save the widget
-# library(htmlwidgets)
-# saveWidget(p, file=paste0( getwd(), "/HtmlWidget/sankeyColor1.html"))
+save_png(heatmap_plot_effect, "vasc_heatmap_effect", subfolder = "PCR", height = 9, width = 20)
 ```
-
-

@@ -401,6 +401,7 @@ make_heatmap <- function(data, xaxis, facet) {
       low = "seagreen2", high = "seagreen4", limits = c(1, max_upreg), 
       trans = scales::log10_trans(), labels = \(x) round(x, 2)
     )
+    + scale_color_identity()
     + geom_tile(data = \(d) filter(d, fold >= 1), aes(fill = fold), colour = "white")
     + new_scale("fill")
     + scale_fill_gradient(
@@ -410,7 +411,7 @@ make_heatmap <- function(data, xaxis, facet) {
     )
     + geom_tile(data = \(d) filter(d, fold < 1), aes(fill = fold), colour = "white")
     + geom_text(
-      aes(label = paste(round(fold, 2), stars.pval(p_value), sep = " ")), size = 3, colour = "white", fontface = "bold", 
+      aes(label = tile_label), size = 3, colour = "white", fontface = "bold", 
       check_overlap = TRUE
     )
     + facet_grid(cols = vars(.data[[facet]]), scales = "free_x", space = "free_x")
