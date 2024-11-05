@@ -92,20 +92,18 @@ load_clearing_data <- function(path = configs$data$IHC$clearing_raw) {
     purrr::map(
       rlang::set_names(binned_col_names),
       \(col) select(clearing_binned_data, level, stage, mouse, condition, bins, any_of(col)) |> 
-        mutate(across(c(condition, stage), \(x) to_factor(x)))
+        mutate(across(c(condition, stage, level), \(x) to_factor(x)))
     )
     |> purrr::reduce(\(x, acc) left_join(acc, x, by = c("level", "stage", "mouse", "condition", "bins")))
+    |> tibble::as_tibble()
   )
   
   # Unbinned variables
   clearing_data <- clearing_data |>
     select(-contains("__")) |>
     janitor::clean_names() |> 
-    mutate(across(c(condition, stage), \(x) to_factor(x))) |> 
-    mutate(
-      volume = volume / 1e6,
-      
-    )
+    mutate(across(c(condition, stage, level), \(x) to_factor(x))) |> 
+    tibble::as_tibble()
   
   # Data checks (TODO: move to their own function)
   cerebellar_values_not_equal <- clearing_data |> 

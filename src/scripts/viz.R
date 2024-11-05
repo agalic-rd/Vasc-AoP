@@ -74,8 +74,7 @@ make_signif_boxplot <- function(
     resp_name <- "-1 * DCq"
   }
   
-  ## Making sure the variables of interest are contrasts for emmeans
-  dat <- dat |> mutate(across(c(any_of(c(xaxis, facet)) & where(\(c) !is.factor(c))), as.factor))
+  dat <- dat |> arrange(across(any_of(c(facet, xaxis))))
   
   extra_dat <- dat |> group_by(across(any_of(c(xaxis, facet)))) |> summarize(N = str_glue("N = {get_n_units(pick(everything()))}")) |> ungroup()
   
@@ -92,13 +91,17 @@ make_signif_boxplot <- function(
   if(!is.null(facet)) specs <- paste0(specs, " | ", facet)
   specs <- as.formula(specs)
   
-  emms <- emmeans::emmeans(mod, specs = specs, type = "response", data = insight::get_data(mod))
-  if (tolower(scale) %in% c("response", "resp")) emm <- regrid(emm, transform = "response")
+  emms <- emmeans::emmeans(
+    mod, specs = specs, type = "response", 
+    data = droplevels(insight::get_data(mod))
+  )
+  if (tolower(scale) %in% c("response", "resp")) emms <- regrid(emms, transform = "response")
   
   contrasts <- emmeans::contrast(emms, method = method, adjust = adjust, infer = TRUE) |> 
     as_tibble() |> 
     rename(Contrast = contrast) |> 
-    tidyr::extract(col = Contrast, into = c("X1", "X2"), regex = "(.*) [- | /] (.*)", remove = FALSE)
+    tidyr::extract(col = Contrast, into = c("X1", "X2"), regex = "(.*) [- | /] (.*)", remove = FALSE) |> 
+    arrange(across(any_of(facet)))
   
   p_data_contrasts <- (
     contrasts
@@ -117,7 +120,6 @@ make_signif_boxplot <- function(
     |> ungroup()
     |> filter(p.signif <= .05)
   )
-  
   # -----------[ Plot ]----------- #
   
   plot <- (
@@ -150,7 +152,7 @@ make_signif_boxplot <- function(
       aes(y = min - 0.05 * amp, fontface = "bold", label = N, color = .data[[xaxis]]),
       data = extra_dat, fill = NA, size = 5, alpha = 0.7
     )
-    # + scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
+    + scale_y_continuous(labels = scales::scientific)
     + theme(
       legend.position = "none", 
       panel.grid.major = element_blank(), 
@@ -172,7 +174,7 @@ make_signif_boxplot <- function(
 ## Generating a boxplot for an individual gene, showing interaction effects between two predictors (using the model fitted to this gene's data as input)
 make_signif_boxplot_inter <- function(
     mod, pred1 = "condition", pred2, facet = NULL, cluster = NULL, add_cluster_averages = FALSE, invert_DCq = TRUE, stage = NULL,
-    scale = "link", adjust = "none", resp_name = NULL, ncol = 2
+    scale = "link", adjust = "none", resp_name = NULL, max_points = 50, ncol = 2
 ) {
   
   get_n_units <- function(df) {
@@ -192,8 +194,7 @@ make_signif_boxplot_inter <- function(
     else resp_name <- get_response_name(resp)
   }
   
-  ## Making sure the variables of interest are factors for emmeans
-  dat <- dat |> mutate(across(c(any_of(c(pred1, pred2)) & where(\(c) !is.factor(c))), as.factor))
+  dat <- dat |> arrange(across(any_of(c(facet, pred2, pred1))))
   
   extra_dat <- dat |> 
     group_by(across(any_of(c(pred1, pred2, facet))), .drop = TRUE) |> 
@@ -217,17 +218,18 @@ make_signif_boxplot_inter <- function(
   # )
   specs <- as.formula(specs)
   
-  emmeans <- emmeans::emmeans(
+  emms <- emmeans::emmeans(
     mod, specs = specs, type = "response", 
-    by = facet, data = mutate(insight::get_data(mod), across(any_of(c(facet)), as.character))
+    by = facet, data = droplevels(insight::get_data(mod))
   )
-  if (tolower(scale) %in% c("response", "resp")) emmeans <- regrid(emmeans, transform = "response")
+  if (tolower(scale) %in% c("response", "resp")) emms <- regrid(emms, transform = "response")
   
-  contrasts <- emmeans::contrast(emmeans, method = "pairwise", adjust = adjust, infer = TRUE) |> 
+  contrasts <- emmeans::contrast(emms, method = "pairwise", adjust = adjust, infer = TRUE) |> 
     as.data.frame() |> 
     rename(Contrast = contrast) |> 
-    tidyr::extract(col = Contrast, into = c("X1", "X2"), regex = "(.*) [- | /] (.*)", remove = FALSE)
-  
+    tidyr::extract(col = Contrast, into = c("X1", "X2"), regex = "(.*) [- | /] (.*)", remove = FALSE) |> 
+    arrange(across(any_of(c(facet, pred2))))
+
   p_data_contrasts <- contrasts |>
     group_by(across(any_of(c(pred2, facet)))) |>
     mutate(
@@ -243,10 +245,11 @@ make_signif_boxplot_inter <- function(
     ) |>
     ungroup()
   
-  contrasts_interactions <- emmeans::contrast(emmeans, interaction = c("pairwise"), by = facet, adjust = "none", infer = TRUE) |> 
+  contrasts_interactions <- emmeans::contrast(emms, interaction = c("pairwise"), by = facet, adjust = "none", infer = TRUE) |> 
     as.data.frame() |> 
     tidyr::extract(col = paste0(pred1, "_pairwise"), into = c("pred1_1", "pred1_2"), regex = "(.*) [- | /] (.*)", remove = FALSE) |> 
-    tidyr::extract(col = paste0(pred2, "_pairwise"), into = c("pred2_1", "pred2_2"), regex = "(.*) [- | /] (.*)", remove = FALSE)
+    tidyr::extract(col = paste0(pred2, "_pairwise"), into = c("pred2_1", "pred2_2"), regex = "(.*) [- | /] (.*)", remove = FALSE) |> 
+    arrange(across(any_of(c(facet))))
   
   p_data_interactions <- contrasts_interactions |>
     group_by(across(any_of(c(facet)))) |>
@@ -273,11 +276,11 @@ make_signif_boxplot_inter <- function(
     + stat_summary(fun = mean, geom = "errorbar", aes(ymax = after_stat(y), ymin = after_stat(y)), width = 0.75, size = 1.1, linetype = "dotted")
     + { 
       if (!is.null(cluster)) geom_jitter(
-        data = \(x) x |> group_by(across(any_of(c(pred1, pred2)))) |> group_modify(\(d, g) slice_sample(d, n = min(nrow(d), 50))) |> ungroup(), 
+        data = \(x) x |> group_by(across(any_of(c(pred1, pred2)))) |> group_modify(\(d, g) slice_sample(d, n = min(nrow(d), max_points))) |> ungroup(), 
         size = 1.5, width = 0.1, alpha = 0.3
       )
       else geom_jitter(
-        data = \(x) x |> group_by(across(any_of(c(pred1, pred2)))) |> group_modify(\(d, g) slice_sample(d, n = min(nrow(d), 50))) |> ungroup(), 
+        data = \(x) x |> group_by(across(any_of(c(pred1, pred2)))) |> group_modify(\(d, g) slice_sample(d, n = min(nrow(d), max_points))) |> ungroup(), 
         mapping = aes(fill = .data[[pred1]]), shape = 23, color = color_text, size = 3, width = 0.1, alpha = 0.9
       )
     }
@@ -312,6 +315,7 @@ make_signif_boxplot_inter <- function(
       legend.position = "none",
       plot.subtitle = ggtext::element_markdown(hjust = 0.5, face = "plain")
     )
+    + scale_y_continuous(labels = scales::scientific)
     + labs(y = resp_name, x = str_c(pred1, " by ", pred2))
     + {if(!is.null(stage)) labs(subtitle = str_glue("{stage}"))}
     + {if (!is.null(facet)) facet_wrap( ~ .data[[facet]], ncol = ncol)}
