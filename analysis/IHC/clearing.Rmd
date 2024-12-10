@@ -74,23 +74,14 @@ fit_all_models <- function(data, vars, family, link = "log", total_only = FALSE)
   )
 }
 
-gamma_resps <- c("volume", "network_length", "surface_area", "segment_partitioning", "mean_segment_radius", "mean_segment_length", "mean_segment_tortuosity", "mean_segment_volume", "mean_segment_surface_area")
+# gamma_resps <- c("volume", "network_length", "surface_area", "segment_partitioning", "mean_segment_radius", "mean_segment_length", "mean_segment_tortuosity", "mean_segment_volume", "mean_segment_surface_area")
 
-negbin_resps <- c("branchpoints", "endpoints", "number_of_segments")
+# negbin_resps <- c("branchpoints", "endpoints", "number_of_segments")
 
-gamma_mods <- fit_all_models(clearing$normal, gamma_resps, family = "Gamma", link = "log", total_only = TRUE)
-nbinom_mods <- fit_all_models(clearing$normal, negbin_resps, family = "nbinom1", total_only = TRUE)
+# gamma_mods <- fit_all_models(clearing$normal, gamma_resps, family = "Gamma", link = "log", total_only = TRUE)
+# nbinom_mods <- fit_all_models(clearing$normal, negbin_resps, family = "nbinom1", total_only = TRUE)
 
-all_mods <- bind_rows(gamma_mods, nbinom_mods)
-```
-
-```{r}
-mods <- all_mods |> filter(var_name == "volume", stage %in% c("P12", "P21"))
-
-mods |> apply(1, function(x) parameters(x$mod))
-
-mods |> apply(1, function(x) emmeans(x$mod, specs = "condition", type = "response") |> 
-  contrast(method = "pairwise", adjust = "none", infer = TRUE))
+# all_mods <- bind_rows(gamma_mods, nbinom_mods)
 ```
 
 ```{r fig.height = 20, fig.width = 15}
@@ -98,29 +89,29 @@ fig_1 <- c("volume", "network_length", "surface_area")
 fig_2 <- c("number_of_segments", "branchpoints", "endpoints", "segment_partitioning", "mean_segment_tortuosity")
 fig_3 <- c("mean_segment_volume", "mean_segment_surface_area", "mean_segment_length", "mean_segment_radius")
 
-all_mods |> 
-  filter(var_name %in% fig_1) |>
-  mutate(var_name = factor(var_name, levels = fig_1)) |> 
-  group_by(var_name, stage) |> 
-  group_map(function(d, g) make_signif_boxplot(first(d$mod), xaxis = "condition")) |> 
-  patchwork::wrap_plots(ncol = 4, axes = "collect") |>
-  save_png("fig_patchwork_1", subfolder = "IHC", width = 18, height = 15, display = TRUE)
+# all_mods |> 
+#   filter(var_name %in% fig_1) |>
+#   mutate(var_name = factor(var_name, levels = fig_1)) |> 
+#   group_by(var_name, stage) |> 
+#   group_map(function(d, g) make_signif_boxplot(first(d$mod), xaxis = "condition")) |> 
+#   patchwork::wrap_plots(ncol = 4, axes = "collect") |>
+#   save_png("fig_patchwork_1", subfolder = "IHC", width = 18, height = 15, display = TRUE)
 
-all_mods |> 
-  filter(var_name %in% fig_2) |>
-  mutate(var_name = factor(var_name, levels = fig_2)) |> 
-  group_by(var_name, stage) |> 
-  group_map(function(d, g) make_signif_boxplot(first(d$mod), xaxis = "condition")) |> 
-  patchwork::wrap_plots(ncol = 4, axes = "collect") |> 
-  save_png("fig_patchwork_2", subfolder = "IHC", width = 18, height = 20, display = TRUE)
+# all_mods |> 
+#   filter(var_name %in% fig_2) |>
+#   mutate(var_name = factor(var_name, levels = fig_2)) |> 
+#   group_by(var_name, stage) |> 
+#   group_map(function(d, g) make_signif_boxplot(first(d$mod), xaxis = "condition")) |> 
+#   patchwork::wrap_plots(ncol = 4, axes = "collect") |> 
+#   save_png("fig_patchwork_2", subfolder = "IHC", width = 18, height = 20, display = TRUE)
 
-all_mods |> 
-  filter(var_name %in% fig_3) |>
-  mutate(var_name = factor(var_name, levels = fig_3)) |> 
-  group_by(var_name, stage) |> 
-  group_map(function(d, g) make_signif_boxplot(first(d$mod), xaxis = "condition")) |> 
-  patchwork::wrap_plots(ncol = 4, axes = "collect") |> 
-  save_png("fig_patchwork_3", subfolder = "IHC", width = 18, height = 20, display = TRUE)
+# all_mods |> 
+#   filter(var_name %in% fig_3) |>
+#   mutate(var_name = factor(var_name, levels = fig_3)) |> 
+#   group_by(var_name, stage) |> 
+#   group_map(function(d, g) make_signif_boxplot(first(d$mod), xaxis = "condition")) |> 
+#   patchwork::wrap_plots(ncol = 4, axes = "collect") |> 
+#   save_png("fig_patchwork_3", subfolder = "IHC", width = 18, height = 20, display = TRUE)
 ```
 
 
@@ -154,7 +145,7 @@ mod_vol_gamma_tot <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_vol_gamma_tot)
 cli_h1("[Fitness]")
-performance(mod_vol_gamma_tot)
+performance(mod_vol_gamma_tot, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 ```
 
 <!----------------------------------------------------------------------------->
@@ -336,7 +327,7 @@ mod_length_gamma_tot <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_length_gamma_tot)
 cli_h1("[Fitness]")
-performance(mod_length_gamma_tot)
+performance(mod_length_gamma_tot, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 ```
 
 <!----------------------------------------------------------------------------->
@@ -518,7 +509,7 @@ mod_area_gamma_tot <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_area_gamma_tot)
 cli_h1("[Fitness]")
-performance(mod_area_gamma_tot)
+performance(mod_area_gamma_tot, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 ```
 
 <!----------------------------------------------------------------------------->
@@ -701,7 +692,7 @@ mod_seg_vol_gamma_tot <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_seg_vol_gamma_tot)
 cli_h1("[Fitness]")
-performance(mod_seg_vol_gamma_tot)
+performance(mod_seg_vol_gamma_tot, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 ```
 
 <!----------------------------------------------------------------------------->
@@ -884,7 +875,7 @@ mod_seg_length_gamma_tot <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_seg_length_gamma_tot)
 cli_h1("[Fitness]")
-performance(mod_seg_length_gamma_tot)
+performance(mod_seg_length_gamma_tot, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 ```
 
 <!----------------------------------------------------------------------------->
@@ -1067,7 +1058,7 @@ mod_seg_area_gamma_tot <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_seg_area_gamma_tot)
 cli_h1("[Fitness]")
-performance(mod_seg_area_gamma_tot)
+performance(mod_seg_area_gamma_tot, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 ```
 
 <!----------------------------------------------------------------------------->
@@ -1251,7 +1242,7 @@ mod_seg_part_gamma_tot <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_seg_part_gamma_tot)
 cli_h1("[Fitness]")
-performance(mod_seg_part_gamma_tot)
+performance(mod_seg_part_gamma_tot, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 ```
 
 <!----------------------------------------------------------------------------->
@@ -1434,7 +1425,7 @@ mod_seg_rad_gamma_tot <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_seg_rad_gamma_tot)
 cli_h1("[Fitness]")
-performance(mod_seg_rad_gamma_tot)
+performance(mod_seg_rad_gamma_tot, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 ```
 
 <!----------------------------------------------------------------------------->
@@ -1617,7 +1608,7 @@ mod_seg_tort_gamma_tot <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_seg_tort_gamma_tot)
 cli_h1("[Fitness]")
-performance(mod_seg_tort_gamma_tot)
+performance(mod_seg_tort_gamma_tot, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 ```
 
 <!----------------------------------------------------------------------------->
@@ -1799,7 +1790,7 @@ mod_numseg_nbinom_tot <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_numseg_nbinom_tot)
 cli_h1("[Fitness]")
-performance(mod_numseg_nbinom_tot)
+performance(mod_numseg_nbinom_tot, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 cli_h1("[Dispersion]")
 check_overdispersion(mod_numseg_nbinom_tot)
 ```
@@ -1984,7 +1975,7 @@ mod_numbranch_nbinom_tot <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_numbranch_nbinom_tot)
 cli_h1("[Fitness]")
-performance(mod_numbranch_nbinom_tot)
+performance(mod_numbranch_nbinom_tot, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 cli_h1("[Dispersion]")
 check_overdispersion(mod_numbranch_nbinom_tot)
 ```
@@ -2169,7 +2160,7 @@ mod_numends_nbinom_tot <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_numends_nbinom_tot)
 cli_h1("[Fitness]")
-performance(mod_numends_nbinom_tot)
+performance(mod_numends_nbinom_tot, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 cli_h1("[Dispersion]")
 check_overdispersion(mod_numends_nbinom_tot)
 ```
@@ -2363,7 +2354,7 @@ mod_vol_gamma_ds <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_vol_gamma_ds)
 cli_h1("[Fitness]")
-performance(mod_vol_gamma_ds)
+performance(mod_vol_gamma_ds, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 ```
 
 
@@ -2585,7 +2576,7 @@ mod_length_gamma_ds <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_length_gamma_ds)
 cli_h1("[Fitness]")
-performance(mod_length_gamma_ds)
+performance(mod_length_gamma_ds, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 ```
 
 
@@ -2807,7 +2798,7 @@ mod_area_gamma_ds <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_area_gamma_ds)
 cli_h1("[Fitness]")
-performance(mod_area_gamma_ds)
+performance(mod_area_gamma_ds, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 ```
 
 
@@ -3029,7 +3020,7 @@ mod_seg_vol_gamma_ds <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_seg_vol_gamma_ds)
 cli_h1("[Fitness]")
-performance(mod_seg_vol_gamma_ds)
+performance(mod_seg_vol_gamma_ds, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 ```
 
 
@@ -3251,7 +3242,7 @@ mod_seg_length_gamma_ds <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_seg_length_gamma_ds)
 cli_h1("[Fitness]")
-performance(mod_seg_length_gamma_ds)
+performance(mod_seg_length_gamma_ds, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 ```
 
 
@@ -3473,7 +3464,7 @@ mod_seg_area_gamma_ds <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_seg_area_gamma_ds)
 cli_h1("[Fitness]")
-performance(mod_seg_area_gamma_ds)
+performance(mod_seg_area_gamma_ds, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 ```
 
 
@@ -3695,7 +3686,7 @@ mod_seg_part_gamma_ds <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_seg_part_gamma_ds)
 cli_h1("[Fitness]")
-performance(mod_seg_part_gamma_ds)
+performance(mod_seg_part_gamma_ds, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 ```
 
 
@@ -3917,7 +3908,7 @@ mod_seg_rad_gamma_ds <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_seg_rad_gamma_ds)
 cli_h1("[Fitness]")
-performance(mod_seg_rad_gamma_ds)
+performance(mod_seg_rad_gamma_ds, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 ```
 
 
@@ -4139,7 +4130,7 @@ mod_seg_tort_gamma_ds <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_seg_tort_gamma_ds)
 cli_h1("[Fitness]")
-performance(mod_seg_tort_gamma_ds)
+performance(mod_seg_tort_gamma_ds, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 ```
 
 
@@ -4363,7 +4354,7 @@ mod_numseg_nbinom_ds <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_numseg_nbinom_ds)
 cli_h1("[Fitness]")
-performance(mod_numseg_nbinom_ds)
+performance(mod_numseg_nbinom_ds, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 cli_h1("[Dispersion]")
 check_overdispersion(mod_numseg_nbinom_ds)
 ```
@@ -4387,15 +4378,15 @@ mod_numseg_nbinom_ds_dharma_t <- t(mod_numseg_nbinom_ds_dharma$simulatedResponse
 ```
 
 ```{r fig.width = 10}
-ppc_plots(mod_numseg_nbinom_ds, simulations = mod_numseg_nbinom_ds_dharma_t, term = "condition")
-ppc_plots(mod_numseg_nbinom_ds, simulations = mod_numseg_nbinom_ds_dharma_t, term = "stage")
-ppc_plots(mod_numseg_nbinom_ds, simulations = mod_numseg_nbinom_ds_dharma_t, term = "level")
+# ppc_plots(mod_numseg_nbinom_ds, simulations = mod_numseg_nbinom_ds_dharma_t, term = "condition")
+# ppc_plots(mod_numseg_nbinom_ds, simulations = mod_numseg_nbinom_ds_dharma_t, term = "stage")
+# ppc_plots(mod_numseg_nbinom_ds, simulations = mod_numseg_nbinom_ds_dharma_t, term = "level")
 ```
 
 ```{r fig.width = 10}
-ppc_stat_plots(mod_numseg_nbinom_ds, simulations = mod_numseg_nbinom_ds_dharma_t, term = "condition")
-ppc_stat_plots(mod_numseg_nbinom_ds, simulations = mod_numseg_nbinom_ds_dharma_t, term = "stage")
-ppc_stat_plots(mod_numseg_nbinom_ds, simulations = mod_numseg_nbinom_ds_dharma_t, term = "level")
+# ppc_stat_plots(mod_numseg_nbinom_ds, simulations = mod_numseg_nbinom_ds_dharma_t, term = "condition")
+# ppc_stat_plots(mod_numseg_nbinom_ds, simulations = mod_numseg_nbinom_ds_dharma_t, term = "stage")
+# ppc_stat_plots(mod_numseg_nbinom_ds, simulations = mod_numseg_nbinom_ds_dharma_t, term = "level")
 ```
 
 #### Potential outliers
@@ -4588,7 +4579,7 @@ mod_numbranch_nbinom_ds <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_numbranch_nbinom_ds)
 cli_h1("[Fitness]")
-performance(mod_numbranch_nbinom_ds)
+performance(mod_numbranch_nbinom_ds, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 cli_h1("[Dispersion]")
 check_overdispersion(mod_numbranch_nbinom_ds)
 ```
@@ -4612,15 +4603,15 @@ mod_numbranch_nbinom_ds_dharma_t <- t(mod_numbranch_nbinom_ds_dharma$simulatedRe
 ```
 
 ```{r fig.width = 10}
-ppc_plots(mod_numbranch_nbinom_ds, simulations = mod_numbranch_nbinom_ds_dharma_t, term = "condition")
-ppc_plots(mod_numbranch_nbinom_ds, simulations = mod_numbranch_nbinom_ds_dharma_t, term = "stage")
-ppc_plots(mod_numbranch_nbinom_ds, simulations = mod_numbranch_nbinom_ds_dharma_t, term = "level")
+# ppc_plots(mod_numbranch_nbinom_ds, simulations = mod_numbranch_nbinom_ds_dharma_t, term = "condition")
+# ppc_plots(mod_numbranch_nbinom_ds, simulations = mod_numbranch_nbinom_ds_dharma_t, term = "stage")
+# ppc_plots(mod_numbranch_nbinom_ds, simulations = mod_numbranch_nbinom_ds_dharma_t, term = "level")
 ```
 
 ```{r fig.width = 10}
-ppc_stat_plots(mod_numbranch_nbinom_ds, simulations = mod_numbranch_nbinom_ds_dharma_t, term = "condition")
-ppc_stat_plots(mod_numbranch_nbinom_ds, simulations = mod_numbranch_nbinom_ds_dharma_t, term = "stage")
-ppc_stat_plots(mod_numbranch_nbinom_ds, simulations = mod_numbranch_nbinom_ds_dharma_t, term = "level")
+# ppc_stat_plots(mod_numbranch_nbinom_ds, simulations = mod_numbranch_nbinom_ds_dharma_t, term = "condition")
+# ppc_stat_plots(mod_numbranch_nbinom_ds, simulations = mod_numbranch_nbinom_ds_dharma_t, term = "stage")
+# ppc_stat_plots(mod_numbranch_nbinom_ds, simulations = mod_numbranch_nbinom_ds_dharma_t, term = "level")
 ```
 
 #### Potential outliers
@@ -4813,7 +4804,7 @@ mod_numends_nbinom_ds <- glmmTMB(
 cli_h1("[Parameters]")
 parameters(mod_numends_nbinom_ds)
 cli_h1("[Fitness]")
-performance(mod_numends_nbinom_ds)
+performance(mod_numends_nbinom_ds, metrics = c("AIC", "AICc", "BIC", "ICC", "RMSE"))
 cli_h1("[Dispersion]")
 check_overdispersion(mod_numends_nbinom_ds)
 ```
@@ -4837,15 +4828,15 @@ mod_numends_nbinom_ds_dharma_t <- t(mod_numends_nbinom_ds_dharma$simulatedRespon
 ```
 
 ```{r fig.width = 10}
-ppc_plots(mod_numends_nbinom_ds, simulations = mod_numends_nbinom_ds_dharma_t, term = "condition")
-ppc_plots(mod_numends_nbinom_ds, simulations = mod_numends_nbinom_ds_dharma_t, term = "stage")
-ppc_plots(mod_numends_nbinom_ds, simulations = mod_numends_nbinom_ds_dharma_t, term = "level")
+# ppc_plots(mod_numends_nbinom_ds, simulations = mod_numends_nbinom_ds_dharma_t, term = "condition")
+# ppc_plots(mod_numends_nbinom_ds, simulations = mod_numends_nbinom_ds_dharma_t, term = "stage")
+# ppc_plots(mod_numends_nbinom_ds, simulations = mod_numends_nbinom_ds_dharma_t, term = "level")
 ```
 
 ```{r fig.width = 10}
-ppc_stat_plots(mod_numends_nbinom_ds, simulations = mod_numends_nbinom_ds_dharma_t, term = "condition")
-ppc_stat_plots(mod_numends_nbinom_ds, simulations = mod_numends_nbinom_ds_dharma_t, term = "stage")
-ppc_stat_plots(mod_numends_nbinom_ds, simulations = mod_numends_nbinom_ds_dharma_t, term = "level")
+# ppc_stat_plots(mod_numends_nbinom_ds, simulations = mod_numends_nbinom_ds_dharma_t, term = "condition")
+# ppc_stat_plots(mod_numends_nbinom_ds, simulations = mod_numends_nbinom_ds_dharma_t, term = "stage")
+# ppc_stat_plots(mod_numends_nbinom_ds, simulations = mod_numends_nbinom_ds_dharma_t, term = "level")
 ```
 
 #### Potential outliers
