@@ -390,12 +390,12 @@ make_fold_timeline_plot <- function(
 ####🔺Heatmap ####
 #----------------#
 
-make_heatmap <- function(data, xaxis, facet) {
+make_heatmap <- function(data, xaxis, yaxis = "gene", facet) {
   
   max_upreg <- data |> filter(fold >= 1) |> pull(fold) |> max()
   
   return(
-    ggplot(data, aes(x = .data[[xaxis]], y = gene))
+    ggplot(data, aes(x = .data[[xaxis]], y = .data[[yaxis]]))
     + scale_fill_gradient(
       name = regulation_type$UPREG, 
       low = "seagreen2", high = "seagreen4", limits = c(1, max_upreg), 

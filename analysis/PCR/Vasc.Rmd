@@ -119,8 +119,8 @@ heatmap_data <- vasc_data$predictions |>
   select(stage, gene, fold, p_value, fx, effect, abb) |> 
   mutate(tile_label = paste(round(fold, 2), stars.pval(p_value), sep = " "))
 
-heatmap_plot <- make_heatmap(heatmap_data, xaxis = "abb", facet = "stage") + 
-  labs(x = "Function")
+heatmap_plot <- make_heatmap(heatmap_data, xaxis = "gene", facet = "stage") + 
+  labs(x = "Gene", y = "Function")
 
 save_png(heatmap_plot, "vasc_heatmap", subfolder = "PCR", height = 8, width = 15)
 ```
