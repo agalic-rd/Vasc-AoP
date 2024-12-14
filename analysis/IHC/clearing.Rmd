@@ -4331,7 +4331,7 @@ Levels separated:
 
 ```{r fig.height = 6, fig.width = 18}
 make_signif_boxplot_inter(mod_seg_tort_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 5) |> 
-  save_png("mod_seg_rad_gamma_ds_inter", subfolder = "IHC", width = 18, height = 6)
+  save_png("mod_seg_tort_gamma_ds_inter", subfolder = "IHC", width = 18, height = 6)
 ```
 
 <!----------------------------------------------------------------------------->
@@ -5056,4 +5056,25 @@ no_strip <- theme(strip.text = element_blank(), strip.background = element_blank
   (make_signif_boxplot(mod_seg_rad_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) + 
   plot_layout(axes = "collect")) |> 
   save_png ("Fig3", subfolder = "IHC", width = 14, height = 20)
+```
+
+
+<!----------------------------------------------------------------------------->
+## 4. Figure 4
+***
+
+```{r}
+no_strip <- theme(strip.text = element_blank(), strip.background = element_blank())
+```
+
+```{r fig.height = 28, fig.width = 17}
+(make_signif_boxplot_inter(mod_vol_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) /
+  (make_signif_boxplot_inter(mod_length_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
+  (make_signif_boxplot_inter(mod_numbranch_nbinom_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
+   (make_signif_boxplot_inter(mod_seg_tort_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
+   (make_signif_boxplot_inter(mod_seg_part_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
+   (make_signif_boxplot_inter(mod_seg_vol_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
+   (make_signif_boxplot_inter(mod_seg_area_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) +
+  plot_layout(axes = "collect")) |> 
+  save_png("Fig4", subfolder = "IHC", width = 17, height = 28)
 ```

@@ -161,7 +161,7 @@ make_signif_boxplot <- function(
       plot.subtitle = ggtext::element_markdown(hjust = 0.5, face = "plain"),
       plot.caption = element_text(hjust = 0.5, face = "plain", size = 9)
     )
-    + labs(y = resp_name)
+    + labs(x = get_response_name(xaxis), y = resp_name)
     + {if(!is.null(subtitle)) labs(subtitle = subtitle)}
     + {if(!is.null(caption)) labs(caption = caption)}
     + {if (!is.null(facet)) facet_wrap( ~ .data[[facet]], ncol = ncol)}
@@ -210,12 +210,6 @@ make_signif_boxplot_inter <- function(
   
   specs <- paste0(" ~ ", pred1)
   if (!is.null(pred2)) specs <- paste0(specs, " | ", pred2)
-  # specs <- case_when(
-  #   is.null(pred2) && !is.null(facet) ~ paste0(specs, " | ", facet),
-  #   !is.null(pred2) && is.null(facet) ~ paste0(specs, " | ", pred2),
-  #   !is.null(pred2) && !is.null(facet) ~ paste0(specs, " | ", pred2, " * ", facet),
-  #   .default = specs
-  # )
   specs <- as.formula(specs)
   
   emms <- emmeans::emmeans(
@@ -316,7 +310,7 @@ make_signif_boxplot_inter <- function(
       plot.subtitle = ggtext::element_markdown(hjust = 0.5, face = "plain")
     )
     + scale_y_continuous(labels = scales::scientific)
-    + labs(y = resp_name, x = str_c(pred1, " by ", pred2))
+    + labs(y = resp_name, x = str_c(get_response_name(pred1), " by ", get_response_name(pred2)))
     + {if(!is.null(stage)) labs(subtitle = str_glue("{stage}"))}
     + {if (!is.null(facet)) facet_wrap( ~ .data[[facet]], ncol = ncol)}
     + {if (add_cluster_averages) labs(caption = str_glue("Small round points are individual measurements\n Diamonds represent {cluster}-averages"))}

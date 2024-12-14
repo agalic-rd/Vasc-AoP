@@ -119,15 +119,16 @@ heatmap_data <- vasc_data$predictions |>
   select(stage, gene, fold, p_value, fx, effect, abb) |> 
   mutate(tile_label = paste(round(fold, 2), stars.pval(p_value), sep = " "))
 
-heatmap_plot <- make_heatmap(heatmap_data, xaxis = "gene", facet = "stage") + 
-  labs(x = "Gene", y = "Function")
+heatmap_plot <- make_heatmap(heatmap_data, xaxis = "gene", yaxis = "abb", facet = "stage") + 
+  labs(x = "Gene", y = "Function") + 
+  facet_grid(rows = vars(stage), scales = "free_y", space = "free_y")
 
 save_png(heatmap_plot, "vasc_heatmap", subfolder = "PCR", height = 8, width = 15)
 ```
 
 With effects:
 
-```{r fig.height = 8, fig.width = 18}
+```{r fig.height = 12, fig.width = 16}
 heatmap_data_effect <- vasc_data$predictions |>
   filter(p_value <= .05) |>
   left_join(supplementary_data$gene_data$fx, by = "gene", relationship = "many-to-many") |>
@@ -141,9 +142,10 @@ heatmap_data_effect <- vasc_data$predictions |>
     )
   )
 
-heatmap_plot_effect <- make_heatmap(heatmap_data_effect, xaxis = "abb", facet = "stage") + 
-  labs(x = "Function", caption = "➕ Positive effect | ➖ Negative effect") + 
+heatmap_plot_effect <- make_heatmap(heatmap_data_effect, xaxis = "gene", yaxis = "abb", facet = "stage") + 
+  labs(x = "Gene", y = "Function", caption = "➕ Positive effect | ➖ Negative effect")  + 
+  facet_grid(rows = vars(stage), scales = "free_y", space = "free_y") +
   theme(plot.caption = element_text(hjust = 0.5, vjust = 0.5, face = "bold", size = 16))
 
-save_png(heatmap_plot_effect, "vasc_heatmap_effect", subfolder = "PCR", height = 9, width = 20)
+save_png(heatmap_plot_effect, "vasc_heatmap_effect", subfolder = "PCR", height = 12, width = 16)
 ```
