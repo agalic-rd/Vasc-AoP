@@ -174,7 +174,7 @@ make_signif_boxplot <- function(
 ## Generating a boxplot for an individual gene, showing interaction effects between two predictors (using the model fitted to this gene's data as input)
 make_signif_boxplot_inter <- function(
     mod, pred1 = "condition", pred2, facet = NULL, cluster = NULL, add_cluster_averages = FALSE, invert_DCq = TRUE, stage = NULL,
-    scale = "link", adjust = "none", resp_name = NULL, max_points = 50, ncol = 2
+    add_interactions = FALSE, scale = "link", adjust = "none", resp_name = NULL, max_points = 50, ncol = 2
 ) {
   
   get_n_units <- function(df) {
@@ -238,29 +238,33 @@ make_signif_boxplot_inter <- function(
       pos.y = max + step * 0.1 * (max - min)
     ) |>
     ungroup()
+
+  if (add_interactions) {
   
-  contrasts_interactions <- emmeans::contrast(emms, interaction = c("pairwise"), by = facet, adjust = "none", infer = TRUE) |> 
-    as.data.frame() |> 
-    tidyr::extract(col = paste0(pred1, "_pairwise"), into = c("pred1_1", "pred1_2"), regex = "(.*) [- | /] (.*)", remove = FALSE) |> 
-    tidyr::extract(col = paste0(pred2, "_pairwise"), into = c("pred2_1", "pred2_2"), regex = "(.*) [- | /] (.*)", remove = FALSE) |> 
-    arrange(across(any_of(c(facet))))
-  
-  p_data_interactions <- contrasts_interactions |>
-    group_by(across(any_of(c(facet)))) |>
-    mutate(
-      x1 = 0.5 * ((match(pred2_1, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(pred1_1, levels(dat[[pred1]])) +
-                    (match(pred2_1, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(pred1_2, levels(dat[[pred1]]))),
-      x2 = 0.5 * ((match(pred2_2, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(pred1_1, levels(dat[[pred1]])) +
-                    (match(pred2_2, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(pred1_2, levels(dat[[pred1]]))),
-      p.signif = label_pval(p.value)
-    ) |>
-    arrange(x.diff := abs(x2 - x1)) |>
-    mutate(
-      step = 1:n() + choose(length(unique(dat[[pred1]])), 2),
-      pos.x = (x2 + x1) * 0.5,
-      pos.y = max + step * 0.1 * (max - min)
-    ) |>
-    ungroup()
+    contrasts_interactions <- emmeans::contrast(emms, interaction = c("pairwise"), by = facet, adjust = "none", infer = TRUE) |> 
+        as.data.frame() |> 
+        tidyr::extract(col = paste0(pred1, "_pairwise"), into = c("pred1_1", "pred1_2"), regex = "(.*) [- | /] (.*)", remove = FALSE) |> 
+        tidyr::extract(col = paste0(pred2, "_pairwise"), into = c("pred2_1", "pred2_2"), regex = "(.*) [- | /] (.*)", remove = FALSE) |> 
+        arrange(across(any_of(c(facet))))
+    
+    p_data_interactions <- contrasts_interactions |>
+        group_by(across(any_of(c(facet)))) |>
+        mutate(
+        x1 = 0.5 * ((match(pred2_1, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(pred1_1, levels(dat[[pred1]])) +
+                        (match(pred2_1, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(pred1_2, levels(dat[[pred1]]))),
+        x2 = 0.5 * ((match(pred2_2, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(pred1_1, levels(dat[[pred1]])) +
+                        (match(pred2_2, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(pred1_2, levels(dat[[pred1]]))),
+        p.signif = label_pval(p.value)
+        ) |>
+        arrange(x.diff := abs(x2 - x1)) |>
+        mutate(
+        step = 1:n() + choose(length(unique(dat[[pred1]])), 2),
+        pos.x = (x2 + x1) * 0.5,
+        pos.y = max + step * 0.1 * (max - min)
+        ) |>
+        ungroup()
+
+    }
   
   # -----------[ Plot ]----------- #
   
@@ -297,21 +301,27 @@ make_signif_boxplot_inter <- function(
       data = extra_dat, fill = NA, size = 5, alpha = 0.7
     )
     ## Interactions
-    + geom_errorbarh(
-      data = p_data_interactions, aes(xmin = x1, xmax = x2, y = pos.y), inherit.aes = FALSE,
-      color = "black", height = 0.02 * amp, size = 0.5
-    )
-    + geom_text(
-      data = p_data_interactions, aes(x = pos.x, y = pos.y, label = p.signif), inherit.aes = FALSE,
-      size = 5, color = "black", fontface = "bold", vjust = 0, hjust = 0.5, position = position_nudge(y = 0.02 * amp)
-    )
+    + {if (add_interactions) {
+        geom_errorbarh(
+          data = p_data_interactions, aes(xmin = x1, xmax = x2, y = pos.y), inherit.aes = FALSE,
+          color = "black", height = 0.02 * amp, size = 0.5
+        )
+      }
+    }
+    + {if (add_interactions) {
+        geom_text(
+          data = p_data_interactions, aes(x = pos.x, y = pos.y, label = p.signif), inherit.aes = FALSE,
+          size = 5, color = "black", fontface = "bold", vjust = 0, hjust = 0.5, position = position_nudge(y = 0.02 * amp)
+        )
+      }
+    }
     + theme(
       legend.position = "none",
       plot.subtitle = ggtext::element_markdown(hjust = 0.5, face = "plain")
     )
     + scale_y_continuous(labels = scales::scientific)
     + labs(y = resp_name, x = str_c(get_response_name(pred1), " by ", get_response_name(pred2)))
-    + {if(!is.null(stage)) labs(subtitle = str_glue("{stage}"))}
+    + {if (!is.null(stage)) labs(subtitle = str_glue("{stage}"))}
     + {if (!is.null(facet)) facet_wrap( ~ .data[[facet]], ncol = ncol)}
     + {if (add_cluster_averages) labs(caption = str_glue("Small round points are individual measurements\n Diamonds represent {cluster}-averages"))}
     + scale_x_discrete(labels = \(l) str_replace(l, "_", "\n"))
