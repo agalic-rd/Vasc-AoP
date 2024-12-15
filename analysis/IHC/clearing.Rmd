@@ -20,6 +20,17 @@ clearing_responses <- c(
 )
 ```
 
+
+<!----------------------------------------------------------------------------->
+<!----------------------------------------------------------------------------->
+# II. Total
+***
+
+```{r}
+clearing_total <- clearing$normal |> filter(level == "Total")
+clearing_binned_total <- clearing$binned |> filter(level == "Total")
+```
+
 **Temporary:**
 
 ```{r}
@@ -112,17 +123,6 @@ fig_3 <- c("mean_segment_volume", "mean_segment_surface_area", "mean_segment_len
 #   group_map(function(d, g) make_signif_boxplot(first(d$mod), xaxis = "condition")) |> 
 #   patchwork::wrap_plots(ncol = 4, axes = "collect") |> 
 #   save_png("fig_patchwork_3", subfolder = "IHC", width = 18, height = 20, display = TRUE)
-```
-
-
-<!----------------------------------------------------------------------------->
-<!----------------------------------------------------------------------------->
-# II. Total
-***
-
-```{r}
-clearing_total <- clearing$normal |> filter(level == "Total")
-clearing_binned_total <- clearing$binned |> filter(level == "Total")
 ```
 
 <!----------------------------------------------------------------------------->
@@ -2334,6 +2334,94 @@ make_signif_boxplot(mod_numends_nbinom_tot, xaxis = "condition", facet = "stage"
 ```{r}
 clearing_ds <- clearing$normal |> filter(level != "Total")
 clearing_binned_ds <- clearing$binned |> filter(level != "Total")
+```
+
+**Temporary:**
+
+```{r}
+clearing_model_ds <- function(data, resp_name, family, link) {
+  
+  form <- stringr::str_glue("{resp_name} ~ condition * level")
+  start_values <- list(beta = c(log(mean(data[[resp_name]])), rep(0, 3)))
+
+  if (length(unique(data$level)) == 1) {
+    form <- stringr::str_glue("{resp_name} ~ condition")
+    start_values <- list(beta = c(log(mean(data[[resp_name]])), rep(0, 2)))
+  }
+
+  form <- paste(form, "+ offset(log(cerebellar_volume))")
+  
+  mod_gamma <- purrr:::capture_output(
+    glmmTMB(
+      as.formula(form),
+      family = list(family = family, link = link),
+      data = data,
+      start = start_values
+    )
+  )
+  
+  return(list(mod_gamma$result))
+}
+```
+
+```{r}
+fit_all_models_ds <- function(data, vars, family, link = "log") {
+   
+  purrr::map_dfr(
+    vars,
+    function(var) {
+      models <- data |>
+        select(level, stage, condition, mouse, cerebellar_volume, any_of(var)) |>
+        group_split(stage) |>
+        purrr::map_dfr(\(dat) dat |>
+            summarize(stage = first(stage), mod = clearing_model_ds(pick(everything()), var, family, link), var_name = var) |>
+            select(-any_of(var))
+        )
+      
+      return(models)
+    },
+    .progress = TRUE
+  )
+}
+
+gamma_resps <- c("volume", "network_length", "surface_area", "segment_partitioning", "mean_segment_radius", "mean_segment_length", "mean_segment_tortuosity", "mean_segment_volume", "mean_segment_surface_area")
+
+negbin_resps <- c("branchpoints", "endpoints", "number_of_segments")
+
+gamma_mods_ds <- fit_all_models_ds(clearing_ds, gamma_resps, family = "Gamma", link = "log")
+nbinom_mods_ds <- fit_all_models_ds(clearing_ds, negbin_resps, family = "nbinom1")
+
+all_mods_ds <- bind_rows(gamma_mods_ds, nbinom_mods_ds)
+```
+
+```{r fig.height = 20, fig.width = 15}
+fig_1_ds <- c("volume", "network_length", "surface_area")
+fig_2_ds <- c("number_of_segments", "branchpoints", "endpoints", "segment_partitioning", "mean_segment_tortuosity")
+fig_3_ds <- c("mean_segment_volume", "mean_segment_surface_area", "mean_segment_length", "mean_segment_radius")
+
+all_mods_ds |> 
+  filter(var_name %in% fig_1_ds) |>
+  mutate(var_name = factor(var_name, levels = fig_1_ds)) |> 
+  group_by(var_name, stage) |> 
+  group_map(function(d, g) make_signif_boxplot_inter(first(d$mod), pred1 = "condition", pred2 = "level", stage = first(g$stage))) |> 
+  patchwork::wrap_plots(ncol = 4, axes = "collect") |>
+  save_png("fig_ds_separately_1", subfolder = "IHC", width = 18, height = 15, display = TRUE)
+
+all_mods_ds |> 
+  filter(var_name %in% fig_2_ds) |>
+  mutate(var_name = factor(var_name, levels = fig_2_ds)) |> 
+  group_by(var_name, stage) |> 
+  group_map(function(d, g) make_signif_boxplot_inter(first(d$mod), pred1 = "condition", pred2 = "level", stage = first(g$stage))) |> 
+  patchwork::wrap_plots(ncol = 4, axes = "collect") |> 
+  save_png("fig_ds_separately_2", subfolder = "IHC", width = 18, height = 20, display = TRUE)
+
+all_mods_ds |> 
+  filter(var_name %in% fig_3_ds) |>
+  mutate(var_name = factor(var_name, levels = fig_3_ds)) |> 
+  group_by(var_name, stage) |> 
+  group_map(function(d, g) make_signif_boxplot_inter(first(d$mod), pred1 = "condition", pred2 = "level", stage = first(g$stage))) |> 
+  patchwork::wrap_plots(ncol = 4, axes = "collect") |> 
+  save_png("fig_ds_separately_3", subfolder = "IHC", width = 18, height = 20, display = TRUE)
 ```
 
 <!----------------------------------------------------------------------------->
