@@ -5181,9 +5181,42 @@ no_strip <- theme(strip.text = element_blank(), strip.background = element_blank
 ```
 
 ```{r fig.height = 17, fig.width = 14}
-(make_signif_boxplot_inter(mod_vol_gamma_ds, xaxis = "condition", facet = "stage", ncol = 4) /
-  (make_signif_boxplot_inter(mod_length_gamma_ds, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) /
-  (make_signif_boxplot_inter(mod_area_gamma_ds, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) +
+(make_signif_boxplot_inter(mod_vol_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) /
+  (make_signif_boxplot_inter(mod_length_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
+  (make_signif_boxplot_inter(mod_area_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) +
   plot_layout(axes = "collect")) |> 
   save_png("Fig5", subfolder = "IHC", width = 14, height = 17)
+```
+
+<!----------------------------------------------------------------------------->
+## 6. Figure 6
+***
+
+```{r}
+no_strip <- theme(strip.text = element_blank(), strip.background = element_blank())
+```
+
+```{r fig.height = 20, fig.width = 14}
+(make_signif_boxplot_inter(mod_numseg_nbinom_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) /
+  (make_signif_boxplot_inter(mod_numbranch_nbinom_ds,pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
+  (make_signif_boxplot_inter(mod_numends_nbinom_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
+  (make_signif_boxplot_inter(mod_seg_part_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
+  (make_signif_boxplot_inter(mod_seg_tort_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) + 
+  plot_layout(axes = "collect")) |> 
+  save_png ("Fig6", subfolder = "IHC", width = 14, height = 20)
+```
+
+
+
+<!----------------------------------------------------------------------------->
+## 7. Figure 7
+***
+
+```{r fig.height = 20, fig.width = 14}
+(make_signif_boxplot_inter(mod_seg_vol_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) /
+  (make_signif_boxplot_inter(mod_seg_area_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
+  (make_signif_boxplot_inter(mod_seg_length_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
+  (make_signif_boxplot_inter(mod_seg_rad_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) + 
+  plot_layout(axes = "collect")) |> 
+  save_png ("Fig7", subfolder = "IHC", width = 14, height = 20)
 ```
