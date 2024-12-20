@@ -5171,3 +5171,19 @@ no_strip <- theme(strip.text = element_blank(), strip.background = element_blank
   plot_layout(axes = "collect")) |> 
   save_png("Fig4", subfolder = "IHC", width = 17, height = 28)
 ```
+
+<!----------------------------------------------------------------------------->
+## 5. Figure 5
+***
+
+```{r}
+no_strip <- theme(strip.text = element_blank(), strip.background = element_blank())
+```
+
+```{r fig.height = 17, fig.width = 14}
+(make_signif_boxplot_inter(mod_vol_gamma_ds, xaxis = "condition", facet = "stage", ncol = 4) /
+  (make_signif_boxplot_inter(mod_length_gamma_ds, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) /
+  (make_signif_boxplot_inter(mod_area_gamma_ds, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) +
+  plot_layout(axes = "collect")) |> 
+  save_png("Fig5", subfolder = "IHC", width = 14, height = 17)
+```
