@@ -174,7 +174,7 @@ make_signif_boxplot <- function(
 ## Generating a boxplot for an individual gene, showing interaction effects between two predictors (using the model fitted to this gene's data as input)
 make_signif_boxplot_inter <- function(
     mod, pred1 = "condition", pred2, facet = NULL, cluster = NULL, add_cluster_averages = FALSE, invert_DCq = TRUE, stage = NULL,
-    add_interactions = FALSE, scale = "link", adjust = "none", resp_name = NULL, max_points = 50, ncol = 2
+    add_interactions = FALSE, scale = "link", adjust = "none", resp_name = NULL, max_points = 50, ncol = 2, only_signif = FALSE, save_to_subfolder = NULL
 ) {
   
   get_n_units <- function(df) {
@@ -239,6 +239,14 @@ make_signif_boxplot_inter <- function(
     ) |>
     ungroup()
 
+    if (only_signif) {
+        p_data_contrasts <- p_data_contrasts |> 
+            group_by(across(any_of(c(facet)))) |>
+            filter(any(p.signif <= .05)) |>
+            ungroup() |> 
+            droplevels()
+    }
+
   if (add_interactions) {
   
     contrasts_interactions <- emmeans::contrast(emms, interaction = c("pairwise"), by = facet, adjust = "none", infer = TRUE) |> 
@@ -264,6 +272,24 @@ make_signif_boxplot_inter <- function(
         ) |>
         ungroup()
 
+        if (only_signif) {
+            p_data_interactions <- p_data_interactions |> 
+                group_by(across(any_of(c(facet)))) |>
+                filter(any(p.signif <= .05)) |>
+                ungroup() |> 
+                droplevels()
+        }
+
+    }
+    
+    if (only_signif) {
+        dat <- dat |> 
+            filter(.data[[facet]] %in% p_data_contrasts[[facet]]) |> 
+            droplevels()
+        
+        extra_dat <- extra_dat |> 
+            filter(.data[[facet]] %in% p_data_contrasts[[facet]]) |> 
+            droplevels()
     }
   
   # -----------[ Plot ]----------- #
@@ -326,8 +352,17 @@ make_signif_boxplot_inter <- function(
     + {if (add_cluster_averages) labs(caption = str_glue("Small round points are individual measurements\n Diamonds represent {cluster}-averages"))}
     + scale_x_discrete(labels = \(l) str_replace(l, "_", "\n"))
   )
+
+    if (!is.null(save_to_subfolder)) {
+        n_facet <- length(unique(dat[[facet]]))
+        fig_width <- 1 + 4 * n_facet
+        fig_height <- 6 * ceiling(n_facet / ncol)
+        model_name <- deparse(substitute(mod))
+        fig_name <- str_glue("{model_name}_inter")
+        save_png(plot, fig_name, subfolder = save_to_subfolder, width = fig_width, height = fig_height)
+    }
   
-  return(plot)
+    return(plot)
 }
 
 #------------------#
