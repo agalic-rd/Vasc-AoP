@@ -437,7 +437,7 @@ make_heatmap <- function(data, xaxis, yaxis = "gene", facet) {
     ggplot(data, aes(x = .data[[xaxis]], y = .data[[yaxis]]))
     + scale_fill_gradient(
       name = regulation_type$UPREG, 
-      low = "seagreen2", high = "seagreen4", limits = c(1, max_upreg), 
+      low = "#6fedb1", high = "#016937", limits = c(1, max_upreg), 
       trans = scales::log10_trans(), labels = \(x) round(x, 2)
     )
     + scale_color_identity()
@@ -445,7 +445,7 @@ make_heatmap <- function(data, xaxis, yaxis = "gene", facet) {
     + new_scale("fill")
     + scale_fill_gradient(
       name = regulation_type$DOWNREG, 
-      low = "firebrick4", high = "firebrick2", limits = c(0, 1), 
+      low = "#820318", high = "#d95d72", limits = c(0, 1), 
       labels = \(x) round(x, 2)
     )
     + geom_tile(data = \(d) filter(d, fold < 1), aes(fill = fold), colour = "white")
