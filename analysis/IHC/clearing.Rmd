@@ -5244,3 +5244,9 @@ no_strip <- theme(strip.text = element_blank(), strip.background = element_blank
   plot_layout(axes = "collect")) |> 
   save_png ("Fig7", subfolder = "IHC", width = 14, height = 20)
 ```
+
+
+<!----------------------------------------------------------------------------->
+## 8. Figure 8
+***
+
