@@ -2647,19 +2647,19 @@ make_signif_boxplot(mod_vol_gamma_ds, xaxis = "condition", facet = "stage", ncol
 Levels separated:
 
 ```{r fig.height = 6, fig.width = 18}
-# For figure 8
+
 purrr::walk(
-    c("P8", "P12"),
+    c("P4"),
     \(facet) make_signif_boxplot_inter(
         mod_vol_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
         ncol = 5, only_signif = FALSE, save_to_subfolder = "IHC", only_facets = facet
     )
 )
 
-make_signif_boxplot_inter(
-    mod_vol_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
-    ncol = 5, only_signif = FALSE, save_to_subfolder = "IHC", only_facets = c("P8", "P12")
-)
+# make_signif_boxplot_inter(
+#     mod_vol_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
+#     ncol = 5, only_signif = FALSE, save_to_subfolder = "IHC", only_facets = c("P8", "P12")
+# )
 ```
 
 <!----------------------------------------------------------------------------->
@@ -2886,6 +2886,20 @@ make_signif_boxplot_inter(
 )
 ```
 
+Levels separated:
+
+```{r fig.height = 6, fig.width = 18}
+
+purrr::walk(
+    c("P4", "P12"),
+    \(facet) make_signif_boxplot_inter(
+        mod_length_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
+        ncol = 5, only_signif = FALSE, save_to_subfolder = "IHC", only_facets = facet
+    )
+)
+
+```
+
 <!----------------------------------------------------------------------------->
 ## 3. Surface Area
 ***
@@ -3108,6 +3122,20 @@ make_signif_boxplot_inter(
     mod_area_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", 
     ncol = 5, only_signif = TRUE, save_to_subfolder = "IHC"
 )
+```
+
+Levels separated:
+
+```{r fig.height = 6, fig.width = 18}
+
+purrr::walk(
+    c("P12"),
+    \(facet) make_signif_boxplot_inter(
+        mod_area_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
+        ncol = 5, only_signif = FALSE, save_to_subfolder = "IHC", only_facets = facet
+    )
+)
+
 ```
 
 <!----------------------------------------------------------------------------->
@@ -3558,6 +3586,20 @@ make_signif_boxplot_inter(
 )
 ```
 
+Levels separated:
+
+```{r fig.height = 6, fig.width = 18}
+
+purrr::walk(
+    c("P4", "P8"),
+    \(facet) make_signif_boxplot_inter(
+        mod_seg_length_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
+        ncol = 5, only_signif = FALSE, save_to_subfolder = "IHC", only_facets = facet
+    )
+)
+
+```
+
 <!----------------------------------------------------------------------------->
 ## 6. Mean Segment Surface Area
 ***
@@ -3782,6 +3824,21 @@ make_signif_boxplot_inter(
 )
 ```
 
+Levels separated:
+
+```{r fig.height = 6, fig.width = 18}
+
+purrr::walk(
+    c("P4", "P8"),
+    \(facet) make_signif_boxplot_inter(
+        mod_seg_area_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
+        ncol = 5, only_signif = FALSE, save_to_subfolder = "IHC", only_facets = facet
+    )
+)
+
+```
+
+
 <!----------------------------------------------------------------------------->
 ## 7. Segment Partitioning
 ***
@@ -4004,6 +4061,20 @@ make_signif_boxplot_inter(
     mod_seg_part_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", 
     ncol = 5, only_signif = TRUE, save_to_subfolder = "IHC"
 )
+```
+
+Levels separated:
+
+```{r fig.height = 6, fig.width = 18}
+
+purrr::walk(
+    c("P4", "P8", "P12"),
+    \(facet) make_signif_boxplot_inter(
+        mod_seg_part_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
+        ncol = 5, only_signif = FALSE, save_to_subfolder = "IHC", only_facets = facet
+    )
+)
+
 ```
 
 <!----------------------------------------------------------------------------->
@@ -4230,6 +4301,20 @@ make_signif_boxplot_inter(
 )
 ```
 
+Levels separated:
+
+```{r fig.height = 6, fig.width = 18}
+
+purrr::walk(
+    c("P4"),
+    \(facet) make_signif_boxplot_inter(
+        mod_seg_rad_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
+        ncol = 5, only_signif = FALSE, save_to_subfolder = "IHC", only_facets = facet
+    )
+)
+
+```
+
 <!----------------------------------------------------------------------------->
 ## 9. Mean Segment Tortuosity
 ***
@@ -4452,6 +4537,20 @@ make_signif_boxplot_inter(
     mod_seg_tort_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", 
     ncol = 5, only_signif = TRUE, save_to_subfolder = "IHC"
 )
+```
+
+Levels separated:
+
+```{r fig.height = 6, fig.width = 18}
+
+purrr::walk(
+    c("P4", "P21"),
+    \(facet) make_signif_boxplot_inter(
+        mod_seg_tort_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
+        ncol = 5, only_signif = FALSE, save_to_subfolder = "IHC", only_facets = facet
+    )
+)
+
 ```
 
 <!----------------------------------------------------------------------------->
@@ -4681,6 +4780,20 @@ make_signif_boxplot_inter(
 )
 ```
 
+Levels separated:
+
+```{r fig.height = 6, fig.width = 18}
+
+purrr::walk(
+    c("P4"),
+    \(facet) make_signif_boxplot_inter(
+        mod_numseg_nbinom_ds, pred1 = "condition", pred2 = "level", facet = "stage",
+        ncol = 5, only_signif = FALSE, save_to_subfolder = "IHC", only_facets = facet
+    )
+)
+
+```
+
 <!----------------------------------------------------------------------------->
 ## 11. Number of Branchpoints
 ***
@@ -4906,6 +5019,20 @@ make_signif_boxplot_inter(
     mod_numbranch_nbinom_ds, pred1 = "condition", pred2 = "level", facet = "stage", 
     ncol = 5, only_signif = TRUE, save_to_subfolder = "IHC"
 )
+```
+
+Levels separated:
+
+```{r fig.height = 6, fig.width = 18}
+
+purrr::walk(
+    c("P4"),
+    \(facet) make_signif_boxplot_inter(
+        mod_numbranch_nbinom_ds, pred1 = "condition", pred2 = "level", facet = "stage",
+        ncol = 5, only_signif = FALSE, save_to_subfolder = "IHC", only_facets = facet
+    )
+)
+
 ```
 
 <!----------------------------------------------------------------------------->
@@ -5135,6 +5262,19 @@ make_signif_boxplot_inter(
 )
 ```
 
+Levels separated:
+
+```{r fig.height = 6, fig.width = 18}
+
+purrr::walk(
+    c("P8", "P21"),
+    \(facet) make_signif_boxplot_inter(
+        mod_numends_nbinom_ds, pred1 = "condition", pred2 = "level", facet = "stage",
+        ncol = 5, only_signif = FALSE, save_to_subfolder = "IHC", only_facets = facet
+    )
+)
+
+```
 
 <!----------------------------------------------------------------------------->
 <!----------------------------------------------------------------------------->
@@ -5254,8 +5394,4 @@ no_strip <- theme(strip.text = element_blank(), strip.background = element_blank
   save_png ("Fig7", subfolder = "IHC", width = 14, height = 20)
 ```
 
-
-<!----------------------------------------------------------------------------->
-## 8. Figure 8
-***
 
