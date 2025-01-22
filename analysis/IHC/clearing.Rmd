@@ -2647,9 +2647,18 @@ make_signif_boxplot(mod_vol_gamma_ds, xaxis = "condition", facet = "stage", ncol
 Levels separated:
 
 ```{r fig.height = 6, fig.width = 18}
+# For figure 8
+purrr::walk(
+    c("P8", "P12"),
+    \(facet) make_signif_boxplot_inter(
+        mod_vol_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
+        ncol = 5, only_signif = FALSE, save_to_subfolder = "IHC", only_facets = facet
+    )
+)
+
 make_signif_boxplot_inter(
-    mod_vol_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", 
-    ncol = 5, only_signif = TRUE, save_to_subfolder = "IHC"
+    mod_vol_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
+    ncol = 5, only_signif = FALSE, save_to_subfolder = "IHC", only_facets = c("P8", "P12")
 )
 ```
 

@@ -173,38 +173,54 @@ make_signif_boxplot <- function(
 
 ## Generating a boxplot for an individual gene, showing interaction effects between two predictors (using the model fitted to this gene's data as input)
 make_signif_boxplot_inter <- function(
-    mod, pred1 = "condition", pred2, facet = NULL, cluster = NULL, add_cluster_averages = FALSE, invert_DCq = TRUE, stage = NULL,
-    add_interactions = FALSE, scale = "link", adjust = "none", resp_name = NULL, max_points = 50, ncol = 2, only_signif = FALSE, save_to_subfolder = NULL
+    mod, pred1 = "condition", pred2, facet = NULL, cluster = NULL, add_cluster_averages = FALSE, invert_DCq = TRUE, 
+    stage = NULL, add_interactions = FALSE, scale = "link", adjust = "none", 
+    resp_name = NULL, max_points = 50, ncol = 2, only_signif = FALSE, only_facets = NULL, save_to_subfolder = NULL
 ) {
   
-  get_n_units <- function(df) {
-    if(!is.null(cluster) && cluster %in% colnames(df)) return(length(unique(df[[cluster]])))
-    else return(dplyr::tally(df))
-  }
+    get_n_units <- function(df) {
+        if(!is.null(cluster) && cluster %in% colnames(df)) return(length(unique(df[[cluster]])))
+        else return(dplyr::tally(df))
+    }
+
+    dat <- insight::get_data(mod)
+    resp <- insight::find_response(mod)
+
+    is_DCq <- resp %in% c("DCq", "DCt", "dct", "dcq")
+
+    if (is_DCq && invert_DCq) dat <- dat |> mutate({{ resp }} := -1 * .data[[resp]]) # -1 * DCq for better legibility
+
+    if (is.null(resp_name)) {
+        if (is_DCq) resp_name <- ifelse(invert_DCq, str_glue("-1 * {resp}"), str_glue("{resp}"))
+        else resp_name <- get_response_name(resp)
+    }
+
+    dat <- dat |> arrange(across(any_of(c(facet, pred2, pred1))))
+
+    amp_data <- dat |> 
+        group_by(across(any_of(c(facet)))) |> 
+        summarize(
+            max = max(.data[[resp]]),
+            min = min(.data[[resp]]),
+            amp = abs(max - min)
+        ) |> 
+        ungroup()
+
+    extra_dat <- dat |> 
+        group_by(across(any_of(c(pred1, pred2, facet))), .drop = TRUE) |> 
+        summarize(N = str_glue("N = {get_n_units(pick(everything()))}")) |> 
+        # left_join(amp_data) |> 
+        ungroup()
   
-  dat <- insight::get_data(mod)
-  resp <- insight::find_response(mod)
-  
-  is_DCq <- resp %in% c("DCq", "DCt", "dct", "dcq")
-  
-  if (is_DCq && invert_DCq) dat <- dat |> mutate({{ resp }} := -1 * .data[[resp]]) # -1 * DCq for better legibility
-  
-  if (is.null(resp_name)) {
-    if (is_DCq) resp_name <- ifelse(invert_DCq, str_glue("-1 * {resp}"), str_glue("{resp}"))
-    else resp_name <- get_response_name(resp)
-  }
-  
-  dat <- dat |> arrange(across(any_of(c(facet, pred2, pred1))))
-  
-  extra_dat <- dat |> 
-    group_by(across(any_of(c(pred1, pred2, facet))), .drop = TRUE) |> 
-    summarize(N = str_glue("N = {get_n_units(pick(everything()))}")) |> 
-    ungroup()
-  
-  # TODO: should be computed by facet
-  max <- max(dat[[resp]])
-  min <- min(dat[[resp]])
-  amp <- abs(max - min)
+    if (!is.null(only_facets)) {
+        dat <- dat |> filter(.data[[facet]] %in% only_facets) |> droplevels()
+        extra_dat <- extra_dat |> filter(.data[[facet]] %in% only_facets) |> droplevels()
+    }
+
+    # Global min/max/amp
+    max <- max(dat[[resp]])
+    min <- min(dat[[resp]])
+    amp <- abs(max - min)
   
   # -----------[ Contrasts ]----------- #
   
@@ -212,32 +228,37 @@ make_signif_boxplot_inter <- function(
   if (!is.null(pred2)) specs <- paste0(specs, " | ", pred2)
   specs <- as.formula(specs)
   
-  emms <- emmeans::emmeans(
-    mod, specs = specs, type = "response", 
-    by = facet, data = droplevels(insight::get_data(mod))
-  )
-  if (tolower(scale) %in% c("response", "resp")) emms <- regrid(emms, transform = "response")
+    emms <- emmeans::emmeans(
+        mod, specs = specs, type = "response", 
+        by = facet, data = droplevels(insight::get_data(mod))
+    )
+    if (tolower(scale) %in% c("response", "resp")) emms <- regrid(emms, transform = "response")
   
-  contrasts <- emmeans::contrast(emms, method = "pairwise", adjust = adjust, infer = TRUE) |> 
-    as.data.frame() |> 
-    rename(Contrast = contrast) |> 
-    tidyr::extract(col = Contrast, into = c("X1", "X2"), regex = "(.*) [- | /] (.*)", remove = FALSE) |> 
-    arrange(across(any_of(c(facet, pred2))))
+    contrasts <- emmeans::contrast(emms, method = "pairwise", adjust = adjust, infer = TRUE) |> 
+        as.data.frame() |> 
+        rename(Contrast = contrast) |> 
+        tidyr::extract(col = Contrast, into = c("X1", "X2"), regex = "(.*) [- | /] (.*)", remove = FALSE) |> 
+        arrange(across(any_of(c(facet, pred2))))
 
-  p_data_contrasts <- contrasts |>
-    group_by(across(any_of(c(pred2, facet)))) |>
-    mutate(
-      x1 = (match(.data[[pred2]], levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(X1, levels(dat[[pred1]])),
-      x2 = (match(.data[[pred2]], levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(X2, levels(dat[[pred1]])),
-      p.signif = label_pval(p.value)
-    ) |>
-    arrange(x.diff := abs(x2 - x1)) |>
-    mutate(
-      step = 1:n(),
-      pos.x = (x2 + x1) * 0.5,
-      pos.y = max + step * 0.1 * (max - min)
-    ) |>
-    ungroup()
+    if (!is.null(only_facets)) {
+        contrasts <- contrasts |> filter(.data[[facet]] %in% only_facets) |> droplevels()
+    }
+
+    p_data_contrasts <- contrasts |>
+        # left_join(amp_data) |>
+        group_by(across(any_of(c(pred2, facet)))) |>
+        mutate(
+            x1 = (match(.data[[pred2]], levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(X1, levels(dat[[pred1]])),
+            x2 = (match(.data[[pred2]], levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(X2, levels(dat[[pred1]])),
+            p.signif = label_pval(p.value)
+        ) |>
+        arrange(x.diff := abs(x2 - x1)) |>
+        mutate(
+            step = 1:n(),
+            pos.x = (x2 + x1) * 0.5,
+            pos.y = max + step * 0.1 * (max - min)
+        ) |>
+        ungroup()
 
     if (only_signif) {
         p_data_contrasts <- p_data_contrasts |> 
@@ -254,21 +275,26 @@ make_signif_boxplot_inter <- function(
         tidyr::extract(col = paste0(pred1, "_pairwise"), into = c("pred1_1", "pred1_2"), regex = "(.*) [- | /] (.*)", remove = FALSE) |> 
         tidyr::extract(col = paste0(pred2, "_pairwise"), into = c("pred2_1", "pred2_2"), regex = "(.*) [- | /] (.*)", remove = FALSE) |> 
         arrange(across(any_of(c(facet))))
+
+    if (!is.null(only_facets)) {
+        contrasts_interactions <- contrasts_interactions |> filter(.data[[facet]] %in% only_facets) |> droplevels()
+    }
     
     p_data_interactions <- contrasts_interactions |>
+        # left_join(amp_data) |>
         group_by(across(any_of(c(facet)))) |>
         mutate(
-        x1 = 0.5 * ((match(pred2_1, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(pred1_1, levels(dat[[pred1]])) +
-                        (match(pred2_1, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(pred1_2, levels(dat[[pred1]]))),
-        x2 = 0.5 * ((match(pred2_2, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(pred1_1, levels(dat[[pred1]])) +
-                        (match(pred2_2, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(pred1_2, levels(dat[[pred1]]))),
-        p.signif = label_pval(p.value)
+            x1 = 0.5 * ((match(pred2_1, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(pred1_1, levels(dat[[pred1]])) +
+                            (match(pred2_1, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(pred1_2, levels(dat[[pred1]]))),
+            x2 = 0.5 * ((match(pred2_2, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(pred1_1, levels(dat[[pred1]])) +
+                            (match(pred2_2, levels(dat[[pred2]])) - 1) * length(unique(dat[[pred1]])) + match(pred1_2, levels(dat[[pred1]]))),
+            p.signif = label_pval(p.value)
         ) |>
         arrange(x.diff := abs(x2 - x1)) |>
         mutate(
-        step = 1:n() + choose(length(unique(dat[[pred1]])), 2),
-        pos.x = (x2 + x1) * 0.5,
-        pos.y = max + step * 0.1 * (max - min)
+            step = 1:n() + choose(length(unique(dat[[pred1]])), 2),
+            pos.x = (x2 + x1) * 0.5,
+            pos.y = max + step * 0.1 * (max - min)
         ) |>
         ungroup()
 
@@ -294,64 +320,63 @@ make_signif_boxplot_inter <- function(
   
   # -----------[ Plot ]----------- #
   
-  plot <- (
-    ggplot(dat, aes(x = interaction(.data[[pred1]], .data[[pred2]], sep = "_"), y = .data[[resp]], color = .data[[pred1]]))
-    + geom_boxplot(outlier.alpha = 0, size = 1.1, fill = NA)
-    + stat_summary(fun = mean, geom = "errorbar", aes(ymax = after_stat(y), ymin = after_stat(y)), width = 0.75, size = 1.1, linetype = "dotted")
-    + { 
-      if (!is.null(cluster)) geom_jitter(
-        data = \(x) x |> group_by(across(any_of(c(pred1, pred2)))) |> group_modify(\(d, g) slice_sample(d, n = min(nrow(d), max_points))) |> ungroup(), 
-        size = 1.5, width = 0.1, alpha = 0.3
-      )
-      else geom_jitter(
-        data = \(x) x |> group_by(across(any_of(c(pred1, pred2)))) |> group_modify(\(d, g) slice_sample(d, n = min(nrow(d), max_points))) |> ungroup(), 
-        mapping = aes(fill = .data[[pred1]]), shape = 23, color = color_text, size = 3, width = 0.1, alpha = 0.9
-      )
-    }
-    + {
-      if (add_cluster_averages) stat_summary(
-        aes(group = .data[[cluster]], fill = .data[[pred1]]), geom = "point", fun = mean, 
-        size = 3, shape = 23, color = color_text, alpha = 0.9, position = position_dodge(0.2)
-      )
-    }
-    + geom_errorbarh(
-      data = p_data_contrasts, aes(xmin = paste(X1, .data[[pred2]], sep = "_"), xmax = paste(X2, .data[[pred2]], sep = "_"), y = pos.y), inherit.aes = FALSE,
-      color = "black", height = 0.02 * amp, size = 0.5
-    )
-    + geom_text(
-      data = p_data_contrasts, aes(x = pos.x, y = pos.y, label = p.signif), inherit.aes = FALSE,
-      size = 5, color = "black", fontface = "bold", vjust = 0, hjust = 0.5, position = position_nudge(y = 0.02 * amp)
-    )
-    + geom_label(
-      aes(y = min - 0.05 * amp, fontface = "bold", label = N, color = .data[[pred1]]), 
-      data = extra_dat, fill = NA, size = 5, alpha = 0.7
-    )
-    ## Interactions
-    + {if (add_interactions) {
-        geom_errorbarh(
-          data = p_data_interactions, aes(xmin = x1, xmax = x2, y = pos.y), inherit.aes = FALSE,
-          color = "black", height = 0.02 * amp, size = 0.5
+    plot <- (
+        ggplot(dat, aes(x = interaction(.data[[pred1]], .data[[pred2]], sep = "_"), y = .data[[resp]], color = .data[[pred1]]))
+        + geom_boxplot(outlier.alpha = 0, size = 1.1, fill = NA)
+        + stat_summary(fun = mean, geom = "errorbar", aes(ymax = after_stat(y), ymin = after_stat(y)), width = 0.75, size = 1.1, linetype = "dotted")
+        + {
+            if (!is.null(cluster)) geom_jitter(
+                data = \(x) x |> group_by(across(any_of(c(pred1, pred2)))) |> group_modify(\(d, g) slice_sample(d, n = min(nrow(d), max_points))) |> ungroup(), 
+                size = 1.5, width = 0.1, alpha = 0.3
+            )
+            else geom_jitter(
+                data = \(x) x |> group_by(across(any_of(c(pred1, pred2)))) |> group_modify(\(d, g) slice_sample(d, n = min(nrow(d), max_points))) |> ungroup(), 
+                mapping = aes(fill = .data[[pred1]]), shape = 23, color = color_text, size = 3, width = 0.1, alpha = 0.9
+            )
+        }
+        + {
+            if (add_cluster_averages) stat_summary(
+                aes(group = .data[[cluster]], fill = .data[[pred1]]), geom = "point", fun = mean, 
+                size = 3, shape = 23, color = color_text, alpha = 0.9, position = position_dodge(0.2)
+            )
+        }
+        + geom_errorbarh(
+            data = p_data_contrasts, 
+            aes(xmin = paste(X1, .data[[pred2]], sep = "_"), xmax = paste(X2, .data[[pred2]], sep = "_"), y = pos.y), 
+            height = 0.02 * amp, inherit.aes = FALSE, color = "black", size = 0.5
         )
-      }
-    }
-    + {if (add_interactions) {
-        geom_text(
-          data = p_data_interactions, aes(x = pos.x, y = pos.y, label = p.signif), inherit.aes = FALSE,
-          size = 5, color = "black", fontface = "bold", vjust = 0, hjust = 0.5, position = position_nudge(y = 0.02 * amp)
+        + geom_text(
+            data = p_data_contrasts, aes(x = pos.x, y = pos.y, label = p.signif), 
+            inherit.aes = FALSE, size = 5, color = "black", fontface = "bold", vjust = 0, hjust = 0.5 , position = position_nudge(y = 0.02 * amp)
         )
-      }
-    }
-    + theme(
-      legend.position = "none",
-      plot.subtitle = ggtext::element_markdown(hjust = 0.5, face = "plain")
+        + geom_label(
+            aes(y = min - 0.05 * amp, fontface = "bold", label = N, color = .data[[pred1]]), 
+            data = extra_dat, fill = NA, size = 5, alpha = 0.7
+        )
+        ## Interactions
+        + {if (add_interactions) {
+            geom_errorbarh(
+                data = p_data_interactions, aes(xmin = x1, xmax = x2, y = pos.y), height = 0.02 * amp, 
+                inherit.aes = FALSE, color = "black", size = 0.5
+            )}
+        }
+        + {if (add_interactions) {
+            geom_text(
+                data = p_data_interactions, aes(x = pos.x, y = pos.y, label = p.signif), 
+                inherit.aes = FALSE, size = 5, color = "black", fontface = "bold", vjust = 0, hjust = 0.5, position = position_nudge(y = 0.02 * amp)
+            )}
+        }
+        + theme(
+            legend.position = "none",
+            plot.subtitle = ggtext::element_markdown(hjust = 0.5, face = "plain")
+        )
+        + scale_y_continuous(labels = scales::scientific)
+        + labs(y = resp_name, x = str_c(get_response_name(pred1), " by ", get_response_name(pred2)))
+        + {if (!is.null(stage)) labs(subtitle = str_glue("{stage}"))}
+        + {if (!is.null(facet)) facet_wrap( ~ .data[[facet]], ncol = ncol)}
+        + {if (add_cluster_averages) labs(caption = str_glue("Small round points are individual measurements\n Diamonds represent {cluster}-averages"))}
+        + scale_x_discrete(labels = \(l) str_replace(l, "_", "\n"))
     )
-    + scale_y_continuous(labels = scales::scientific)
-    + labs(y = resp_name, x = str_c(get_response_name(pred1), " by ", get_response_name(pred2)))
-    + {if (!is.null(stage)) labs(subtitle = str_glue("{stage}"))}
-    + {if (!is.null(facet)) facet_wrap( ~ .data[[facet]], ncol = ncol)}
-    + {if (add_cluster_averages) labs(caption = str_glue("Small round points are individual measurements\n Diamonds represent {cluster}-averages"))}
-    + scale_x_discrete(labels = \(l) str_replace(l, "_", "\n"))
-  )
 
     if (!is.null(save_to_subfolder)) {
         n_facet <- length(unique(dat[[facet]]))
@@ -359,6 +384,7 @@ make_signif_boxplot_inter <- function(
         fig_height <- 6 * ceiling(n_facet / ncol)
         model_name <- deparse(substitute(mod))
         fig_name <- str_glue("{model_name}_inter")
+        if (!is.null(only_facets)) fig_name <- str_glue("{fig_name}_{paste(only_facets, collapse = '_')}")
         save_png(plot, fig_name, subfolder = save_to_subfolder, width = fig_width, height = fig_height)
     }
   
