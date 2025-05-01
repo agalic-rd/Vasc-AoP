@@ -1,0 +1,23 @@
+# This CITATION.cff file was generated with Zotero.
+
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite it using the metadata from this file.
+title: >-
+  agalic-rd/Vasc-AoP: Initial release
+abstract: Data & R code associated with the 'Changes of cerebellar vascularization in a murine model of apnea of prematurity' project
+type: software
+license: Creative Commons Attribution 4.0 International
+version: v0.1
+url: https://doi.org/10.5281/zenodo.15319299
+authors: 
+  - family-names: Rodriguez-Duboc
+    given-names: Agalic
+    orcid: https://orcid.org/0000-0002-2084-3780
+  - family-names: Rivière
+    given-names: Marc-Aurèle
+    orcid: https://orcid.org/0000-0002-5108-3382
+date-released: 2025-05-01
+identifiers: 
+  - type: doi
+    value: 10.5281/zenodo.15319299

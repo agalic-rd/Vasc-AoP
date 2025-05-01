@@ -3,7 +3,7 @@
 <h1>Changes of cerebellar vascularization in a murine model of apnea of prematurity</h1>
  
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-blue.svg)](https://creativecommons.org/licenses/by/4.0/)
-<!-- [![DOI](https://zenodo.org/badge/873064553.svg)](https://doi.org/???/zenodo.???) -->
+[![DOI](https://zenodo.org/badge/873064553.svg)](https://doi.org/10.5281/zenodo.15319299)
 
 </div>
 
@@ -34,7 +34,7 @@ This project is licensed under the Creative Commons Attribution 4.0 Internationa
 ## 💬 Citation
 
 * **Paper:** _TBA_
-* **Code:** Agalic Rodriguez-Duboc, & Marc-Aurèle Rivière. (2025). agalic-rd/Vasc-AoP: Initial release (v0.1). Zenodo.
+* **Code:** Agalic Rodriguez-Duboc, & Marc-Aurèle Rivière. (2025). agalic-rd/Vasc-AoP: Initial release (v0.1). Zenodo. https://doi.org/10.5281/zenodo.15319299
 
 ## ✨ Contributors
 
