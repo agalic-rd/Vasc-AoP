@@ -11,7 +11,8 @@ options(
   digits = 4L,
   na.action = "na.omit",
   contrasts = c("contr.sum", "contr.poly"),
-  seed = 256
+  seed = 256,
+  dplyr.summarise.inform = FALSE
 )
 
 set.seed(getOption("seed"))

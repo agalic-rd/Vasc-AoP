@@ -24,7 +24,7 @@ packages:
   ## ===[ Model Fitting ]=== ##
   - car
   - forecast
-  - lme4/lme4
+  - lme4
   - glmmTMB@1.1.5
   
   ## ===[ Model Analysis ]=== ##
