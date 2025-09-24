@@ -13,10 +13,10 @@ source("src/setup.R", echo = FALSE)
 (clearing <- load_clearing_data())
 
 clearing_responses <- c(
-  "volume", "network_length", "surface_area", "segment_partitioning",
-  "mean_segment_radius", "mean_segment_length", "mean_segment_tortuosity",
-  "mean_segment_volume", "mean_segment_surface_area", "branchpoints",
-  "endpoints", "number_of_segments"
+    "volume", "network_length", "surface_area", "segment_partitioning",
+    "mean_segment_radius", "mean_segment_length", "mean_segment_tortuosity",
+    "mean_segment_volume", "mean_segment_surface_area", "branchpoints",
+    "endpoints", "number_of_segments"
 )
 ```
 
@@ -42,10 +42,10 @@ clearing_binned_total <- clearing$binned |> filter(level == "Total")
 
 ```{r}
 mod_vol_gamma_tot <- glmmTMB(
-  volume ~ condition * stage + offset(log(cerebellar_volume)),
-  dispformula = ~ stage,
-  family = Gamma("log"),
-  data = clearing_total
+    volume ~ condition * stage + offset(log(cerebellar_volume)),
+    dispformula = ~ stage,
+    family = Gamma("log"),
+    data = clearing_total
 )
 
 cli_h1("[Parameters]")
@@ -97,8 +97,8 @@ get_model_based_outliers(clearing_total, mod_vol_gamma_tot, mod_vol_gamma_tot_dh
 
 ```{r}
 parameters(
-  mod_vol_gamma_tot, exponentiate = should_exp(mod_vol_gamma_tot),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+    mod_vol_gamma_tot, exponentiate = should_exp(mod_vol_gamma_tot),
+    ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 

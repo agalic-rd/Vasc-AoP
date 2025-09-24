@@ -31,7 +31,12 @@ Here, we will fit a simple Linear Model, which is largely similar to running a t
 
 ```{r}
 vasc_model <- function(data) {
-    glmmTMB::glmmTMB(dcq ~ condition, family = gaussian("identity"), data = data, contrasts = list(condition = "contr.sum"))
+    glmmTMB::glmmTMB(
+        dcq ~ condition, 
+        family = gaussian("identity"), 
+        data = data, 
+        contrasts = list(condition = "contr.sum")
+    )
 }
 ```
 

@@ -75,70 +75,81 @@ load_supplementary_data <- function() {
 }
 
 # Loading and shaping Transparization data
-load_clearing_data <- function(path = configs$data$clearing_raw) {
+# @reprocess: if TRUE, re-process the raw data, else simply load it from the processed data
+load_clearing_data <- function(path = configs$data$clearing_raw, reprocess = FALSE) {
     
-    col_names <- (
-        openxlsx2::read_xlsx(path, rows = 1:2, col_names = FALSE, fill_merged_cells = TRUE)
-        |> dplyr::summarize(across(everything(), \(x) paste(na.omit(x), collapse = "__")))
-        |> unlist()
-    )
-    
-    clearing_data <- openxlsx2::read_xlsx(path, start_row = 3, col_names = FALSE) |> 
-        filter(!if_all(everything(), is.na))
-    
-    colnames(clearing_data) <- col_names
-    
-    ## Adding totals (all depths)
-    clearing_data <- (
-        dplyr::bind_rows(
-            clearing_data,
-            clearing_data |> 
-                dplyr::summarize(across(where(is.numeric), sum), .by = c(Stage, Mouse, Condition)) |> 
-                dplyr::mutate(Level = "Total")
+    if (reprocess) {
+
+        col_names <- (
+            openxlsx2::read_xlsx(path, rows = 1:2, col_names = FALSE, fill_merged_cells = TRUE)
+            |> dplyr::summarize(across(everything(), \(x) paste(na.omit(x), collapse = "__")))
+            |> unlist()
         )
-        |> dplyr::filter(Mouse != "KA4N")
-        |> dplyr::arrange(Stage, Condition, Level, Mouse)
-    )
-    
-    # Binned variables
-    clearing_binned_data <- clearing_data |> 
-        dplyr::select(Level, Stage, Mouse, Condition, contains("__")) |> 
-        tidyr::pivot_longer(contains("__"), names_sep = "__", names_to = c(".value", "Bins")) |> 
-        janitor::clean_names()
-    
-    binned_col_names <- stringr::str_subset(colnames(clearing_binned_data), ".*_bin$")
-    
-    clearing_binned_data <- (
-        purrr::map(
-            rlang::set_names(binned_col_names),
-            \(col) dplyr::select(clearing_binned_data, level, stage, mouse, condition, bins, any_of(col)) |> 
-                dplyr::mutate(across(c(condition, stage, level), \(x) to_factor(x)))
+        
+        clearing_data <- openxlsx2::read_xlsx(path, start_row = 3, col_names = FALSE) |> 
+            filter(!if_all(everything(), is.na))
+        
+        colnames(clearing_data) <- col_names
+        
+        ## Adding totals (all depths)
+        clearing_data <- (
+            dplyr::bind_rows(
+                clearing_data,
+                clearing_data |> 
+                    dplyr::summarize(across(where(is.numeric), sum), .by = c(Stage, Mouse, Condition)) |> 
+                    dplyr::mutate(Level = "Total")
+            )
+            |> dplyr::filter(Mouse != "KA4N")
+            |> dplyr::arrange(Stage, Condition, Level, Mouse)
         )
-        |> purrr::reduce(\(x, acc) dplyr::left_join(acc, x, by = c("level", "stage", "mouse", "condition", "bins")))
-        |> tibble::as_tibble()
-    )
-    
-    # Unbinned variables
-    clearing_data <- clearing_data |>
-        dplyr::select(-contains("__")) |>
-        janitor::clean_names() |> 
-        dplyr::mutate(across(c(condition, stage, level), \(x) to_factor(x))) |> 
-        tibble::as_tibble()
-    
-    # Data checks
-    cerebellar_values_not_equal <- clearing_data |> 
-        filter(level != "Total") |> 
-        tidyr::pivot_wider(names_from = level, values_from = -c(level, stage, condition, mouse)) |> 
-        dplyr::filter(
-            cerebellar_volume_Deep != cerebellar_volume_Superficial 
-            | cerebellar_area_Deep != cerebellar_area_Superficial, 
-            .by = stage
-        ) |> 
-        dplyr::select(stage, mouse, condition, starts_with("cerebellar_volume"), starts_with("cerebellar_area"))
-    
-    if (nrow(cerebellar_values_not_equal) > 0) cli::cli_alert_warning("Cerebellar values are not equal for some mice")
-    
-    return(list(normal = clearing_data, binned = clearing_binned_data))
+        
+        # Binned variables
+        clearing_binned_data <- clearing_data |> 
+            dplyr::select(Level, Stage, Mouse, Condition, contains("__")) |> 
+            tidyr::pivot_longer(contains("__"), names_sep = "__", names_to = c(".value", "Bins")) |> 
+            janitor::clean_names()
+        
+        binned_col_names <- stringr::str_subset(colnames(clearing_binned_data), ".*_bin$")
+        
+        clearing_binned_data <- (
+            purrr::map(
+                rlang::set_names(binned_col_names),
+                \(col) dplyr::select(clearing_binned_data, level, stage, mouse, condition, bins, any_of(col)) |> 
+                    dplyr::mutate(across(c(condition, stage, level), \(x) to_factor(x)))
+            )
+            |> purrr::reduce(\(x, acc) dplyr::left_join(acc, x, by = c("level", "stage", "mouse", "condition", "bins")))
+            |> tibble::as_tibble()
+        )
+        
+        # Unbinned variables
+        clearing_data <- clearing_data |>
+            dplyr::select(-contains("__")) |>
+            janitor::clean_names() |> 
+            dplyr::mutate(across(c(condition, stage, level), \(x) to_factor(x))) |> 
+            tibble::as_tibble()
+        
+        # Data checks
+        cerebellar_values_not_equal <- clearing_data |> 
+            filter(level != "Total") |> 
+            tidyr::pivot_wider(names_from = level, values_from = -c(level, stage, condition, mouse)) |> 
+            dplyr::filter(
+                cerebellar_volume_Deep != cerebellar_volume_Superficial 
+                | cerebellar_area_Deep != cerebellar_area_Superficial, 
+                .by = stage
+            ) |> 
+            dplyr::select(stage, mouse, condition, starts_with("cerebellar_volume"), starts_with("cerebellar_area"))
+        
+        if (nrow(cerebellar_values_not_equal) > 0) cli::cli_alert_warning("Cerebellar values are not equal for some mice")
+
+        res <- list(normal = clearing_data, binned = clearing_binned_data)
+
+        saveRDS(res, configs$data$clearing_processed)
+        
+    } else {
+        res <- readRDS(configs$data$clearing_processed)
+    }
+
+    return(res)
 }
 
 ## Loading the PCR data
