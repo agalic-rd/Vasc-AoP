@@ -8,9 +8,17 @@ cli_h2("┗ [SCRIPTS] Loading data ingestion functions")
 ####🔺Helper functions ####
 #-------------------------#
 
+## Loading the data dictionary
+load_data_dict <- function(path = configs$data$data_dict) {
+    purrr::map(
+        readxl::excel_sheets(path) |> purrr::set_names(), 
+        \(sheet) readxl::read_excel(path, sheet = sheet)
+    )
+}
+
 ## Turn a variable into a factor, ordered based on the level order defined within the relevant sheet of the provided data dictionary
-to_factor <- function(var, dict_path = configs$data$data_dict) {
-    return(factor(var, read_excel(dict_path, sheet = deparse(substitute(var)))$Name))
+to_factor <- function(var, dict = data_dict) {
+    factor(var, pluck(dict, deparse(substitute(var)), "Name"))
 }
 
 ## Helper functions to associate a regulation status (down or up-regulated) to each gene

@@ -42,14 +42,14 @@ label_pval <- function(p) {
   str_c(scales::label_pvalue()(p) |> str_remove(">") |> str_trim(), stars_pval(p), sep = " ")
 }
 
-get_response_name <- function(var, col = "Label") {
-  res <- read_xlsx(configs$data$data_dict, sheet = 1) |> filter(Name == var) |> pull(col)
+get_response_name <- function(var, col = "Label", dict = data_dict) {
+  res <- dict[[1]] |> filter(Name == var) |> pull(col)
   
   return(res %ne% var)
 }
 
-get_var_level_name <- function(var, level, col = "Description") {
-  res <- read_excel(configs$data$data_dict, sheet = var) |> filter(Name == level) |> pull(col)
+get_var_level_name <- function(var, level, col = "Description", dict = data_dict) {
+  res <- dict[[var]] |> filter(Name == level) |> pull(col)
   
   return(res %ne% level)
 }

@@ -1,5 +1,7 @@
 ```{r}
 source("src/setup.R", echo = FALSE)
+
+data_dict <- load_data_dict()
 ```
 
 <!---------------------------------------------------------->
@@ -9,9 +11,7 @@ source("src/setup.R", echo = FALSE)
 
 ```{r}
 (supplementary_data <- load_supplementary_data())
-```
 
-```{r}
 # Use reprocess = TRUE to re-process the data and refit the models (will take a few minutes)
 ## Reprocessing requires to provide a model (e.g. model = vasc_model, which is defined right underneath)
 # If reprocess = FALSE, the data will be loaded from the processed data (pcr_processed.rds)

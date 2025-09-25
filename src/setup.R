@@ -58,6 +58,12 @@ cli_h1("[CONFIG] Setting project and packages' options")
 source(here("src", "config.R"), echo = FALSE)
 source(here("src", "theme.R"), echo = FALSE)
 
+options(bitmapType = "cairo")
+
+if (nzchar(Sys.getenv("DISPLAY")) && capabilities("cairo")) {
+    options(device = function(...) x11(type = "cairo", ...))
+}
+
 #---------------------#
 ####🔺Source files ####
 #---------------------#
