@@ -231,6 +231,7 @@ local({
     if (length(md5)) {
       pkgpath <- renv_bootstrap_find(version)
       if (length(pkgpath) && file.exists(pkgpath)) {
+        dir.create(library, recursive = TRUE, showWarnings = FALSE)
         file.copy(pkgpath, library, recursive = TRUE)
         return(invisible())
       }

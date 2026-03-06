@@ -2,5 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+.gitconfig
 TODO.md
 tests.qmd

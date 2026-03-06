@@ -12,11 +12,11 @@
 
 source("src/renv/init.R")
 
-cli::cli_h1("[Vasc-AoP] Loading project")
-
 if (should_restore()) {
     safe_restore()
 }
+
+cli::cli_h1("[Vasc-AoP] Loading project")
 
 #----------------------#
 ####🔺loading files ####
