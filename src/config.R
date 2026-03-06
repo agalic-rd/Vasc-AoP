@@ -1,28 +1,31 @@
-####╔═════    ══════╗####
-####💠Project Config💠####
-####╚═════    ══════╝####
+cli::cli_h2("┗ [Vasc-AoP] Setting project configs")
 
-cli_h2("┗ [CONFIG] Loading external {.file _configs.yml} file")
-
-configs <- load_yml(here("_configs.yml"))
+#----------------#
+####🔺Options ####
+#----------------#
 
 options(
-  scipen = 999L, 
-  digits = 4L,
-  na.action = "na.omit",
-  contrasts = c("contr.sum", "contr.poly"),
-  seed = 256,
-  dplyr.summarise.inform = FALSE
+    verbose = FALSE,
+    bitmapType = "cairo",
+    scipen = 999L,
+    digits = 4L,
+    na.action = "na.omit",
+    contrasts = c("contr.sum", "contr.poly"),
+    seed = 256,
+    dplyr.summarise.inform = FALSE
 )
+
+if (nzchar(Sys.getenv("DISPLAY")) && capabilities("cairo")) {
+    options(device = function(...) x11(type = "cairo", ...))
+}
 
 set.seed(getOption("seed"))
 
 #------------------------#
-####🔺Package options ####
+####🔺Project configs ####
 #------------------------#
 
-cli_h2("┗ [CONFIG] Setting packages options")
-
+configs <- yaml::read_yaml(here::here("_configs.yml"), eval.expr = TRUE)
 
 #----------------#
 ####🔺Masking ####

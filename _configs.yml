@@ -1,6 +1,7 @@
 data:
   data_dict: !expr here::here("data", "__data_dictionary.xlsx")
   gene_data: !expr here::here("data", "__gene_data.xlsx")
+  animal_data: !expr here::here("data", "__animal_data.csv")
   pcr_raw: !expr here::here("data", "pcr_raw.xlsx")
   pcr_processed: !expr here::here("data", "pcr_processed.rds")
   clearing_raw: !expr here::here("data", "clearing_raw.xlsx")
