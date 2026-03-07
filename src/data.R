@@ -11,7 +11,7 @@ load_data_dict <- function(path = configs$data$data_dict) {
 
 ## Turn a variable into a factor, ordered based on the level order defined within the relevant sheet of the provided data dictionary
 to_factor <- function(var, dict = data_dict) {
-    factor(var, pluck(dict, deparse(substitute(var)), "Name"))
+    factor(var, purrr::pluck(dict, deparse(substitute(var)), "Name"))
 }
 
 ## Helper functions to associate a regulation status (down or up-regulated) to each gene
@@ -25,7 +25,7 @@ regulation_type <- list(
 )
 
 get_regulation_type <- function(fold, p_value) {
-    case_when(
+    dplyr::case_when(
         p_value <= .05 & fold < 1 ~ regulation_type$DOWNREG,
         p_value <= .05 & fold > 1 ~ regulation_type$UPREG,
         is.na(p_value) | is.na(fold) ~ NA_character_,
@@ -65,7 +65,7 @@ load_supplementary_data <- function() {
     res$animal_data <- read.csv(configs$data$animal_data)
 
     res$gene_data <- purrr::map(purrr::set_names(readxl::excel_sheets(configs$data$gene_data)), function(sheet) {
-        readxl::read_excel(configs$data$gene_data, sheet) |> janitor::clean_names()
+        readxl::read_excel(configs$data$gene_data, sheet) |> dplyr::rename_with(stringr::str_to_snake)
     })
 
     res$gene_data$fx <- res$gene_data$fx |>
@@ -91,7 +91,7 @@ load_clearing_data <- function(path = configs$data$clearing_raw, reprocess = FAL
             unlist())
 
         clearing_data <- openxlsx2::read_xlsx(path, start_row = 3, col_names = FALSE) |>
-            filter(!if_all(everything(), is.na))
+            dplyr::filter(!dplyr::if_all(everything(), is.na))
 
         colnames(clearing_data) <- col_names
 
@@ -109,7 +109,7 @@ load_clearing_data <- function(path = configs$data$clearing_raw, reprocess = FAL
         clearing_binned_data <- clearing_data |>
             dplyr::select(Level, Stage, Mouse, Condition, contains("__")) |>
             tidyr::pivot_longer(contains("__"), names_sep = "__", names_to = c(".value", "Bins")) |>
-            janitor::clean_names()
+            dplyr::rename_with(stringr::str_to_snake)
 
         binned_col_names <- stringr::str_subset(colnames(clearing_binned_data), ".*_bin$")
 
@@ -127,7 +127,7 @@ load_clearing_data <- function(path = configs$data$clearing_raw, reprocess = FAL
         # Unbinned variables
         clearing_data <- clearing_data |>
             dplyr::select(-contains("__")) |>
-            janitor::clean_names() |>
+            dplyr::rename_with(stringr::str_to_snake) |>
             dplyr::mutate(across(c(condition, stage, level), \(x) {
                 to_factor(x)
             })) |>
@@ -135,7 +135,7 @@ load_clearing_data <- function(path = configs$data$clearing_raw, reprocess = FAL
 
         # Data checks
         cerebellar_values_not_equal <- clearing_data |>
-            filter(level != "Total") |>
+            dplyr::filter(level != "Total") |>
             tidyr::pivot_wider(names_from = level, values_from = -c(level, stage, condition, mouse)) |>
             dplyr::filter(
                 cerebellar_volume_Deep != cerebellar_volume_Superficial |
@@ -178,7 +178,7 @@ load_pcr_data <- function(max_cq_clean = 33, reprocess = FALSE, model = NULL) {
             readxl::read_excel(path, sheet = x)
         }) |>
             purrr::list_rbind(names_to = "stage") |>
-            janitor::clean_names() |>
+            dplyr::rename_with(stringr::str_to_snake) |>
             tidyr::extract(
                 mouse,
                 into = c("bloodline", "pup", "condition"),

@@ -47,17 +47,17 @@ stars_pval <- function(p) {
 }
 
 label_pval <- function(p) {
-    str_c(scales::label_pvalue()(p) |> str_remove(">") |> str_trim(), stars_pval(p), sep = " ")
+    stringr::str_c(scales::label_pvalue()(p) |> stringr::str_remove(">") |> stringr::str_trim(), stars_pval(p), sep = " ")
 }
 
 get_response_name <- function(var, col = "Label", dict = data_dict) {
-    res <- dict[[1]] |> filter(Name == var) |> pull(col)
+    res <- dict[[1]] |> dplyr::filter(Name == var) |> dplyr::pull(col)
 
     return(res %ne% var)
 }
 
 get_var_level_name <- function(var, level, col = "Description", dict = data_dict) {
-    res <- dict[[var]] |> filter(Name == level) |> pull(col)
+    res <- dict[[var]] |> dplyr::filter(Name == level) |> dplyr::pull(col)
 
     return(res %ne% level)
 }

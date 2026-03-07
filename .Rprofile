@@ -1,2 +1,4 @@
 source("renv/activate.R")
-source("src/init.R")
+if (interactive()) {
+    source("src/init.R")
+}

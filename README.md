@@ -13,19 +13,14 @@
 ## ❔ Requirements
 
 * R version 4.3 or newer
-* R Studio version 2022.07 or newer
 
 ## 💻 Repository structure
 
-* `analysis/`: R Markdown files containing the data analysis pipeline.
-  * The first code chunk of any `.Rmd` file typically installs and loads all required packages based on the `renv.lock`.
+* `analysis/`: R Markdown files containing the data analysis code.
 * `data/`: Contains the raw and processed data used in the analyses.
 * `src/`: R scripts declaring custom functions called within the analysis files (e.g., for plotting, data processing).
 * `fig/`: Stores figures generated during the analysis.
 * `_configs.yml`: Lists paths to external files (e.g., data) and potentially other configuration settings used within the code.
-* `_dependencies.yml`: Lists the R packages required for this project (managed by `renv`, you don't need to edit this file).
-* `renv.lock`: Records the exact versions of R packages used, ensuring reproducibility (managed by the `renv` package).
-* `renv/`: Directory used by the `renv` package to manage project-specific libraries. You don't need to edit this folder.
 
 ## 📜 License
 
