@@ -7,7 +7,10 @@ cli::cli_h2("┗ [Vasc-AoP] Loading visualizations")
 corr_matrix_plot <- function(dat, vars, title = "") {
     return(
         dat |>
-            dplyr::mutate(dplyr::across(where(is.character), factor), dplyr::across(where(is.factor), label_encoding)) |>
+            dplyr::mutate(
+                dplyr::across(where(is.character), factor),
+                dplyr::across(where(is.factor), label_encoding)
+            ) |>
             correlation(select = vars, include_factors = TRUE, redundant = TRUE, method = "auto") |>
             dplyr::rename(R = matches("^r$|^rho$")) |>
             dplyr::mutate(dplyr::across(matches("Parameter[1-2]"), \(x) {
@@ -71,7 +74,12 @@ make_signif_boxplot <- function(
     if (
         !is.null(cluster) &&
             cluster %in% colnames(dat) &&
-            dat |> dplyr::group_by(dplyr::across(any_of(c(xaxis, facet, cluster)))) |> dplyr::count() |> dplyr::filter(n > 1) |> nrow() == 0
+            dat |>
+                dplyr::group_by(dplyr::across(any_of(c(xaxis, facet, cluster)))) |>
+                dplyr::count() |>
+                dplyr::filter(n > 1) |>
+                nrow() ==
+                0
     ) {
         cluster <- NULL
         add_cluster_averages <- FALSE
@@ -205,13 +213,14 @@ make_signif_boxplot <- function(
             }
         } +
         #+ ggrepel::geom_text_repel(aes(label = mouse), color = "black")
-        geom_errorbarh(
+        geom_errorbar(
             data = p_data_contrasts,
             aes(xmin = x1, xmax = x2, y = pos.y),
             inherit.aes = FALSE,
             color = "black",
             height = 0.03 * amp,
-            linewidth = 0.5
+            linewidth = 0.5,
+            orientation = "y"
         ) +
         geom_text(
             data = p_data_contrasts,
@@ -408,7 +417,9 @@ make_signif_boxplot_inter <- function(
             dplyr::arrange(dplyr::across(any_of(c(facet))))
 
         if (!is.null(only_facets)) {
-            contrasts_interactions <- contrasts_interactions |> dplyr::filter(.data[[facet]] %in% only_facets) |> droplevels()
+            contrasts_interactions <- contrasts_interactions |>
+                dplyr::filter(.data[[facet]] %in% only_facets) |>
+                droplevels()
         }
 
         p_data_interactions <- contrasts_interactions |>
@@ -515,13 +526,14 @@ make_signif_boxplot_inter <- function(
                 )
             }
         } +
-        geom_errorbarh(
+        geom_errorbar(
             data = p_data_contrasts,
             aes(xmin = paste(X1, .data[[pred2]], sep = "_"), xmax = paste(X2, .data[[pred2]], sep = "_"), y = pos.y),
             height = 0.02 * amp,
             inherit.aes = FALSE,
             color = "black",
-            size = 0.5
+            size = 0.5,
+            orientation = "y"
         ) +
         geom_text(
             data = p_data_contrasts,
@@ -544,13 +556,14 @@ make_signif_boxplot_inter <- function(
         ## Interactions
         {
             if (add_interactions) {
-                geom_errorbarh(
+                geom_errorbar(
                     data = p_data_interactions,
                     aes(xmin = x1, xmax = x2, y = pos.y),
                     height = 0.02 * amp,
                     inherit.aes = FALSE,
                     color = "black",
-                    size = 0.5
+                    size = 0.5,
+                    orientation = "y"
                 )
             }
         } +
@@ -656,7 +669,10 @@ make_fold_timeline_plot <- function(
         scale_x_discrete(expand = expansion(add = 1 * size_boost), limits = \(x) {
             rev(x)
         }) +
-        labs(x = "", y = ifelse(trans != "identity", stringr::str_glue("Fold Change *({trans} scale)*"), "Fold Change")) +
+        labs(
+            x = "",
+            y = ifelse(trans != "identity", stringr::str_glue("Fold Change *({trans} scale)*"), "Fold Change")
+        ) +
         coord_flip() +
         facet_grid(
             vars(.data[[facet_rows]]),
@@ -859,7 +875,7 @@ make_cerv_normalized_plot <- function(
             aes(color = .data[[color_by]], shape = .data[[color_by]]),
             size = 2.5,
             alpha = 0.95,
-            position = position_jitter(width = 0.3)
+            position = position_dodge2(0.5)
         ) +
         labs(
             x = get_response_name(xaxis),
@@ -881,4 +897,30 @@ make_cerv_normalized_plot <- function(
         ) +
         scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
         scale_color_manual(values = colors_sex)
+}
+
+#------------------#
+####🔺PCA plots ####
+#------------------#
+
+make_pca_plot <- function(dat, stage = "P4") {
+    filtered_dat <- dat |> dplyr::filter(stage == !!stage & level == "Total")
+    data_numeric <- filtered_dat |> dplyr::select(where(is.numeric))
+    group <- filtered_dat |> dplyr::mutate(group = paste0(stage, " ", condition)) |> dplyr::pull(group)
+
+    pca_res <- PCA(data_numeric, scale.unit = TRUE, ncp = 4, graph = FALSE)
+
+    fviz_pca_biplot(
+        pca_res,
+        geom.ind = "point",
+        habillage = group,
+        addEllipses = TRUE,
+        ellipse.type = "convex",
+        palette = c("blue", "red"),
+        col.var = "black",
+        labelsize = 3,
+        arrow.size = 0.1,
+        pointsize = 1,
+        repel = TRUE
+    )
 }

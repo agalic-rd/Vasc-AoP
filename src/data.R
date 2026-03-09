@@ -82,7 +82,7 @@ load_supplementary_data <- function() {
 
 # Loading and shaping Transparization data
 # @reprocess: if TRUE, re-process the raw data, else simply load it from the processed data
-load_clearing_data <- function(path = configs$data$clearing_raw, reprocess = FALSE) {
+load_clearing_data <- function(path = configs$data$clearing_raw, reprocess = FALSE, responses = NULL) {
     if (reprocess) {
         col_names <- (openxlsx2::read_xlsx(path, rows = 1:2, col_names = FALSE, fill_merged_cells = TRUE) |>
             dplyr::summarize(across(everything(), \(x) {
@@ -95,34 +95,39 @@ load_clearing_data <- function(path = configs$data$clearing_raw, reprocess = FAL
 
         colnames(clearing_data) <- col_names
 
+        if (is.null(responses)) {
+            responses <- c(
+                "volume",
+                "network_length",
+                "surface_area",
+                "segment_partitioning",
+                "mean_segment_radius",
+                "mean_segment_length",
+                "mean_segment_tortuosity",
+                "mean_segment_volume",
+                "mean_segment_surface_area",
+                "branchpoints",
+                "endpoints",
+                "number_of_segments"
+            )
+        }
+
+        clearing_data <- clearing_data |> dplyr::rename_with(stringr::str_to_snake) |> dplyr::select(-contains("_bin_"))
+
         ## Adding totals (all depths)
         clearing_data <- (dplyr::bind_rows(
             clearing_data,
             clearing_data |>
-                dplyr::summarize(across(where(is.numeric), sum), .by = c(Stage, Mouse, Condition)) |>
-                dplyr::mutate(Level = "Total")
+                dplyr::summarize(
+                    cerebellar_volume = first(cerebellar_volume),
+                    cerebellar_area = first(cerebellar_area),
+                    across(all_of(responses), sum),
+                    .by = c(stage, mouse, condition)
+                ) |>
+                dplyr::mutate(level = "Total")
         ) |>
-            dplyr::filter(Mouse != "KA4N") |>
-            dplyr::arrange(Stage, Condition, Level, Mouse))
-
-        # Binned variables
-        clearing_binned_data <- clearing_data |>
-            dplyr::select(Level, Stage, Mouse, Condition, contains("__")) |>
-            tidyr::pivot_longer(contains("__"), names_sep = "__", names_to = c(".value", "Bins")) |>
-            dplyr::rename_with(stringr::str_to_snake)
-
-        binned_col_names <- stringr::str_subset(colnames(clearing_binned_data), ".*_bin$")
-
-        clearing_binned_data <- (purrr::map(rlang::set_names(binned_col_names), \(col) {
-            dplyr::select(clearing_binned_data, level, stage, mouse, condition, bins, any_of(col)) |>
-                dplyr::mutate(across(c(condition, stage, level), \(x) {
-                    to_factor(x)
-                }))
-        }) |>
-            purrr::reduce(\(x, acc) {
-                dplyr::left_join(acc, x, by = c("level", "stage", "mouse", "condition", "bins"))
-            }) |>
-            tibble::as_tibble())
+            dplyr::filter(mouse != "KA4N") |>
+            dplyr::arrange(stage, condition, level, mouse))
 
         # Unbinned variables
         clearing_data <- clearing_data |>
@@ -148,7 +153,7 @@ load_clearing_data <- function(path = configs$data$clearing_raw, reprocess = FAL
             cli::cli_alert_warning("Cerebellar values are not equal for some mice")
         }
 
-        res <- list(normal = clearing_data, binned = clearing_binned_data)
+        res <- clearing_data
 
         saveRDS(res, configs$data$clearing_processed)
     } else {

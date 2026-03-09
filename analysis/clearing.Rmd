@@ -1,18 +1,12 @@
-```{r}
-source("src/setup.R", echo = FALSE)
-
-data_dict <- load_data_dict()
-```
-
 <!----------------------------------------------------------------------------->
 <!----------------------------------------------------------------------------->
 # I. Data:
 ***
 
 ```{r}
-(supplementary_data <- load_supplementary_data())
+data_dict <- load_data_dict()
 
-(clearing <- load_clearing_data())
+supplementary_data <- load_supplementary_data()
 
 clearing_responses <- c(
     "volume", "network_length", "surface_area", "segment_partitioning",
@@ -20,6 +14,11 @@ clearing_responses <- c(
     "mean_segment_volume", "mean_segment_surface_area", "branchpoints",
     "endpoints", "number_of_segments"
 )
+
+clearing <- load_clearing_data(reprocess = TRUE, responses = clearing_responses)
+
+clearing_total <- clearing |> dplyr::filter(level == "Total")
+clearing_ds <- clearing |> dplyr::filter(level != "Total")
 ```
 
 
@@ -27,11 +26,6 @@ clearing_responses <- c(
 <!----------------------------------------------------------------------------->
 # II. Total
 ***
-
-```{r}
-clearing_total <- clearing$normal |> filter(level == "Total")
-clearing_binned_total <- clearing$binned |> filter(level == "Total")
-```
 
 <!----------------------------------------------------------------------------->
 ## 1. Volume
@@ -100,7 +94,7 @@ get_model_based_outliers(clearing_total, mod_vol_gamma_tot, mod_vol_gamma_tot_dh
 ```{r}
 parameters(
     mod_vol_gamma_tot, exponentiate = should_exp(mod_vol_gamma_tot),
-    ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+    ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -282,7 +276,7 @@ get_model_based_outliers(clearing_total, mod_length_gamma_tot, mod_length_gamma_
 ```{r}
 parameters(
   mod_length_gamma_tot, exponentiate = should_exp(mod_length_gamma_tot),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -464,7 +458,7 @@ get_model_based_outliers(clearing_total, mod_area_gamma_tot, mod_area_gamma_tot_
 ```{r}
 parameters(
   mod_area_gamma_tot, exponentiate = should_exp(mod_area_gamma_tot),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -647,7 +641,7 @@ get_model_based_outliers(clearing_total, mod_seg_vol_gamma_tot, mod_seg_vol_gamm
 ```{r}
 parameters(
   mod_seg_vol_gamma_tot, exponentiate = should_exp(mod_seg_vol_gamma_tot),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -830,7 +824,7 @@ get_model_based_outliers(clearing_total, mod_seg_length_gamma_tot, mod_seg_lengt
 ```{r}
 parameters(
   mod_seg_length_gamma_tot, exponentiate = should_exp(mod_seg_length_gamma_tot),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -1013,7 +1007,7 @@ get_model_based_outliers(clearing_total, mod_seg_area_gamma_tot, mod_seg_area_ga
 ```{r}
 parameters(
   mod_seg_area_gamma_tot, exponentiate = should_exp(mod_seg_area_gamma_tot),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -1197,7 +1191,7 @@ get_model_based_outliers(clearing_total, mod_seg_part_gamma_tot, mod_seg_part_ga
 ```{r}
 parameters(
   mod_seg_part_gamma_tot, exponentiate = should_exp(mod_seg_part_gamma_tot),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -1380,7 +1374,7 @@ get_model_based_outliers(clearing_total, mod_seg_rad_gamma_tot, mod_seg_rad_gamm
 ```{r}
 parameters(
   mod_seg_rad_gamma_tot, exponentiate = should_exp(mod_seg_rad_gamma_tot),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -1563,7 +1557,7 @@ get_model_based_outliers(clearing_total, mod_seg_tort_gamma_tot, mod_seg_tort_ga
 ```{r}
 parameters(
   mod_seg_tort_gamma_tot, exponentiate = should_exp(mod_seg_tort_gamma_tot),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -1747,7 +1741,7 @@ get_model_based_outliers(clearing_total, mod_numseg_nbinom_tot, mod_numseg_nbino
 ```{r}
 parameters(
   mod_numseg_nbinom_tot, exponentiate = should_exp(mod_numseg_nbinom_tot),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -1932,7 +1926,7 @@ get_model_based_outliers(clearing_total, mod_numbranch_nbinom_tot, mod_numbranch
 ```{r}
 parameters(
   mod_numbranch_nbinom_tot, exponentiate = should_exp(mod_numbranch_nbinom_tot),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -2117,7 +2111,7 @@ get_model_based_outliers(clearing_total, mod_numends_nbinom_tot, mod_numends_nbi
 ```{r}
 parameters(
   mod_numends_nbinom_tot, exponentiate = should_exp(mod_numends_nbinom_tot),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -2239,11 +2233,6 @@ make_signif_boxplot(mod_numends_nbinom_tot, xaxis = "condition", facet = "stage"
 ## III. Deep vs Superficial
 ***
 
-```{r}
-clearing_ds <- clearing$normal |> filter(level != "Total")
-clearing_binned_ds <- clearing$binned |> filter(level != "Total")
-```
-
 <!----------------------------------------------------------------------------->
 ## 1. Volume
 ***
@@ -2312,7 +2301,7 @@ get_model_based_outliers(clearing_ds, mod_vol_gamma_ds, mod_vol_gamma_ds_dharma,
 ```{r}
 parameters(
   mod_vol_gamma_ds, exponentiate = should_exp(mod_vol_gamma_ds),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -2536,7 +2525,7 @@ get_model_based_outliers(clearing_ds, mod_length_gamma_ds, mod_length_gamma_ds_d
 ```{r}
 parameters(
   mod_length_gamma_ds, exponentiate = should_exp(mod_length_gamma_ds),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -2760,7 +2749,7 @@ get_model_based_outliers(clearing_ds, mod_area_gamma_ds, mod_area_gamma_ds_dharm
 ```{r}
 parameters(
   mod_area_gamma_ds, exponentiate = should_exp(mod_area_gamma_ds),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -2984,7 +2973,7 @@ get_model_based_outliers(clearing_ds, mod_seg_vol_gamma_ds, mod_seg_vol_gamma_ds
 ```{r}
 parameters(
   mod_seg_vol_gamma_ds, exponentiate = should_exp(mod_seg_vol_gamma_ds),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -3208,7 +3197,7 @@ get_model_based_outliers(clearing_ds, mod_seg_length_gamma_ds, mod_seg_length_ga
 ```{r}
 parameters(
   mod_seg_length_gamma_ds, exponentiate = should_exp(mod_seg_length_gamma_ds),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -3432,7 +3421,7 @@ get_model_based_outliers(clearing_ds, mod_seg_area_gamma_ds, mod_seg_area_gamma_
 ```{r}
 parameters(
   mod_seg_area_gamma_ds, exponentiate = should_exp(mod_seg_area_gamma_ds),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -3656,7 +3645,7 @@ get_model_based_outliers(clearing_ds, mod_seg_part_gamma_ds, mod_seg_part_gamma_
 ```{r}
 parameters(
   mod_seg_part_gamma_ds, exponentiate = should_exp(mod_seg_part_gamma_ds),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -3880,7 +3869,7 @@ get_model_based_outliers(clearing_ds, mod_seg_rad_gamma_ds, mod_seg_rad_gamma_ds
 ```{r}
 parameters(
   mod_seg_rad_gamma_ds, exponentiate = should_exp(mod_seg_rad_gamma_ds),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -4104,7 +4093,7 @@ get_model_based_outliers(clearing_ds, mod_seg_tort_gamma_ds, mod_seg_tort_gamma_
 ```{r}
 parameters(
   mod_seg_tort_gamma_ds, exponentiate = should_exp(mod_seg_tort_gamma_ds),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -4331,7 +4320,7 @@ get_model_based_outliers(clearing_ds, mod_numseg_nbinom_ds, mod_numseg_nbinom_ds
 ```{r}
 parameters(
   mod_numseg_nbinom_ds, exponentiate = should_exp(mod_numseg_nbinom_ds),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -4558,7 +4547,7 @@ get_model_based_outliers(clearing_ds, mod_numbranch_nbinom_ds, mod_numbranch_nbi
 ```{r}
 parameters(
   mod_numbranch_nbinom_ds, exponentiate = should_exp(mod_numbranch_nbinom_ds),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -4785,7 +4774,7 @@ get_model_based_outliers(clearing_ds, mod_numends_nbinom_ds, mod_numends_nbinom_
 ```{r}
 parameters(
   mod_numends_nbinom_ds, exponentiate = should_exp(mod_numends_nbinom_ds),
-  ci_method = "Wald", p_adjust = "none", summary = TRUE, digits = 3
+  ci_method = "wald", p_adjust = "none", summary = TRUE, digits = 3
 )
 ```
 
@@ -4939,250 +4928,4 @@ make_signif_boxplot_inter(
     mod_numends_nbinom_ds, pred1 = "condition", pred2 = "level", facet = "stage",
     ncol = 5, only_signif = FALSE, save_to_subfolder = "IHC"
 )
-```
-
-<!----------------------------------------------------------------------------->
-<!----------------------------------------------------------------------------->
-## IV. Combined Plots
-***
-
-<!----------------------------------------------------------------------------->
-## 1. Figure 1
-***
-
-```{r}
-no_strip <- theme(strip.text = element_blank(), strip.background = element_blank())
-```
-
-```{r fig.height = 17, fig.width = 14}
-(make_signif_boxplot(mod_vol_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) /
-  (make_signif_boxplot(mod_length_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) /
-  (make_signif_boxplot(mod_area_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) +
-  plot_layout(axes = "collect")) |> 
-  save_png("Fig1", subfolder = "IHC", width = 14, height = 17)
-```
-
-<!----------------------------------------------------------------------------->
-## 2. Figure 2
-***
-
-```{r fig.height = 20, fig.width = 14}
-(make_signif_boxplot(mod_numseg_nbinom_tot, xaxis = "condition", facet = "stage", ncol = 4) /
-  (make_signif_boxplot(mod_numbranch_nbinom_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) /
-  (make_signif_boxplot(mod_numends_nbinom_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) /
-  (make_signif_boxplot(mod_seg_part_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) /
-  (make_signif_boxplot(mod_seg_tort_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) + 
-  plot_layout(axes = "collect")) |> 
-  save_png ("Fig2", subfolder = "IHC", width = 14, height = 20)
-```
-
-<!----------------------------------------------------------------------------->
-## 3. Figure 3
-***
-
-```{r fig.height = 20, fig.width = 14}
-(make_signif_boxplot(mod_seg_vol_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) /
-  (make_signif_boxplot(mod_seg_area_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) /
-  (make_signif_boxplot(mod_seg_length_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) /
-  (make_signif_boxplot(mod_seg_rad_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4) + no_strip) + 
-  plot_layout(axes = "collect")) |> 
-  save_png ("Fig3", subfolder = "IHC", width = 14, height = 20)
-```
-
-
-<!----------------------------------------------------------------------------->
-## 4. Figure 4
-***
-
-```{r fig.height = 28, fig.width = 17}
-(make_signif_boxplot_inter(mod_vol_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) /
-  (make_signif_boxplot_inter(mod_length_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
-  (make_signif_boxplot_inter(mod_numbranch_nbinom_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
-   (make_signif_boxplot_inter(mod_seg_tort_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
-   (make_signif_boxplot_inter(mod_seg_part_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
-   (make_signif_boxplot_inter(mod_seg_vol_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
-   (make_signif_boxplot_inter(mod_seg_area_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) +
-  plot_layout(axes = "collect")) |> 
-  save_png("Fig4", subfolder = "IHC", width = 17, height = 28)
-```
-
-<!----------------------------------------------------------------------------->
-## 5. Figure 5
-***
-
-```{r fig.height = 20, fig.width = 18}
-(make_signif_boxplot_inter(mod_vol_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) /
-  (make_signif_boxplot_inter(mod_length_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
-  (make_signif_boxplot_inter(mod_area_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) +
-  plot_layout(axes = "collect")) |> 
-  save_png("Fig5", subfolder = "IHC", width = 18, height = 20)
-```
-
-<!----------------------------------------------------------------------------->
-## 6. Figure 6
-***
-
-```{r fig.height = 25, fig.width = 18}
-(make_signif_boxplot_inter(mod_numseg_nbinom_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) /
-  (make_signif_boxplot_inter(mod_numbranch_nbinom_ds,pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
-  (make_signif_boxplot_inter(mod_numends_nbinom_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
-  (make_signif_boxplot_inter(mod_seg_part_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
-  (make_signif_boxplot_inter(mod_seg_tort_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) + 
-  plot_layout(axes = "collect")) |> 
-  save_png ("Fig6", subfolder = "IHC", width = 18, height = 25)
-```
-
-<!----------------------------------------------------------------------------->
-## 7. Figure 7
-***
-
-```{r fig.height = 22, fig.width = 18}
-(make_signif_boxplot_inter(mod_seg_vol_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) /
-  (make_signif_boxplot_inter(mod_seg_area_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
-  (make_signif_boxplot_inter(mod_seg_length_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) /
-  (make_signif_boxplot_inter(mod_seg_rad_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4) + no_strip) + 
-  plot_layout(axes = "collect")) |> 
-  save_png ("Fig7", subfolder = "IHC", width = 18, height = 22)
-```
-
-<!----------------------------------------------------------------------------->
-## 8. Figure 8
-***
-
-```{r}
-vol_P4 <- make_signif_boxplot_inter(
-    mod_vol_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
-    ncol = 1, only_signif = FALSE, only_facets = "P4"
-)
-
-seg_part_P8 <- make_signif_boxplot_inter(
-    mod_seg_part_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
-    ncol = 1, only_signif = FALSE, only_facets = "P8"
-)
-
-area_P12 <- make_signif_boxplot_inter(
-    mod_area_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
-    ncol = 1, only_signif = FALSE, only_facets = "P12"
-)
-
-numends_P21 <- make_signif_boxplot_inter(
-    mod_numends_nbinom_ds, pred1 = "condition", pred2 = "level", facet = "stage",
-    ncol = 1, only_signif = FALSE, only_facets = "P21"
-)
-
-
-length_P4 <- make_signif_boxplot_inter(
-    mod_length_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
-    ncol = 1, only_signif = FALSE, only_facets = "P4"
-)
-
-endpoints_P8 <- make_signif_boxplot_inter(
-    mod_numends_nbinom_ds, pred1 = "condition", pred2 = "level", facet = "stage",
-    ncol = 1, only_signif = FALSE, only_facets = "P8"
-)
-
-length_P12 <- make_signif_boxplot_inter(
-    mod_length_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
-    ncol = 1, only_signif = FALSE, only_facets = "P12"
-)
-
-
-seg_part_P4 <- make_signif_boxplot_inter(
-    mod_seg_part_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
-    ncol = 1, only_signif = FALSE, only_facets = "P4"
-)
-
-seg_part_P12 <- make_signif_boxplot_inter(
-    mod_seg_part_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
-    ncol = 1, only_signif = FALSE, only_facets = "P12"
-)
-
-
-numbranch_P4 <- make_signif_boxplot_inter(
-    mod_numbranch_nbinom_ds, pred1 = "condition", pred2 = "level", facet = "stage",
-    ncol = 1, only_signif = FALSE, only_facets = "P4"
-)
-
-numseg_P4 <- make_signif_boxplot_inter(
-    mod_numseg_nbinom_ds, pred1 = "condition", pred2 = "level", facet = "stage",
-    ncol = 1, only_signif = FALSE, only_facets = "P4"
-)
-```
-
-```{r fig.height = 30, fig.width = 20}
-layout <- "
-ABCD
-EGH#
-I#J#
-K###
-L###
-"
-
-fig8 <- vol_P4 + seg_part_P8 + area_P12 + numends_P21 +
-    length_P4 + endpoints_P8 + length_P12 +
-    seg_part_P4 + seg_part_P12 +
-    numbranch_P4 + 
-    numseg_P4 +
-    plot_layout(design = layout, guides = "collect", axis_titles = "collect", axes = "collect")
-
-save_png(fig8, filename = "Fig8", subfolder = "IHC", width = 20, height = 30)
-```
-
-<!----------------------------------------------------------------------------->
-## 9. Figure 9
-***
-
-```{r}
-seg_length_P4 <- make_signif_boxplot_inter(
-    mod_seg_length_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
-    ncol = 1, only_signif = FALSE, only_facets = "P4"
-)
-
-seg_length_P8 <- make_signif_boxplot_inter(
-    mod_seg_length_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
-    ncol = 1, only_signif = FALSE, only_facets = "P8"
-)
-
-seg_area_P4 <- make_signif_boxplot_inter(
-    mod_seg_area_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
-    ncol = 1, only_signif = FALSE, only_facets = "P4"
-)
-
-seg_area_P8 <- make_signif_boxplot_inter(
-    mod_seg_area_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
-    ncol = 1, only_signif = FALSE, only_facets = "P8"
-)
-
-seg_rad_P4 <- make_signif_boxplot_inter(
-    mod_seg_rad_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
-    ncol = 1, only_signif = FALSE, only_facets = "P4"
-)
-
-seg_tort_P4 <- make_signif_boxplot_inter(
-    mod_seg_tort_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
-    ncol = 1, only_signif = FALSE, only_facets = "P4"
-)
-
-seg_tort_P21 <- make_signif_boxplot_inter(
-    mod_seg_tort_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage",
-    ncol = 1, only_signif = FALSE, only_facets = "P21"
-)
-```
-
-```{r fig.height = 24, fig.width = 15}
-layout <- "
-ABC
-DE#
-G##
-H##
-"
-
-fig9 <- seg_length_P4 + seg_length_P8 + 
-    seg_tort_P21 +
-    seg_area_P4 + seg_area_P8 +
-    seg_rad_P4 + 
-    seg_tort_P4 +
-    plot_layout(design = layout, guides = "collect", axis_titles = "collect", axes = "collect")
-
-save_png(fig9, filename = "Fig9", subfolder = "IHC", width = 15, height = 24)
 ```
