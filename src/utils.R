@@ -47,7 +47,11 @@ stars_pval <- function(p) {
 }
 
 label_pval <- function(p) {
-    stringr::str_c(scales::label_pvalue()(p) |> stringr::str_remove(">") |> stringr::str_trim(), stars_pval(p), sep = " ")
+    stringr::str_c(
+        scales::label_pvalue()(p) |> stringr::str_remove(">") |> stringr::str_trim(),
+        stars_pval(p),
+        sep = " "
+    )
 }
 
 get_response_name <- function(var, col = "Label", dict = data_dict) {

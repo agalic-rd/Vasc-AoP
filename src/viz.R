@@ -872,18 +872,16 @@ make_cerv_normalized_plot <- function(
         stat_summary(geom = "col", fun = "mean", width = 0.6, linewidth = 0.7, color = "black", fill = NA) +
         stat_summary(geom = "errorbar", fun.data = "mean_se", width = 0.2, linewidth = 0.5) +
         geom_point(
-            aes(color = .data[[color_by]], shape = .data[[color_by]]),
+            aes(fill = .data[[color_by]], shape = .data[[color_by]]),
+            color = "black",
             size = 2.5,
+            stroke = 0.8,
             alpha = 0.95,
             position = position_dodge2(0.5)
         ) +
-        labs(
-            x = get_response_name(xaxis),
-            y = y_label,
-            title = title,
-            color = get_response_name(color_by),
-            shape = get_response_name(color_by)
-        ) +
+        scale_fill_manual(values = c("M" = "black", "F" = "white"), name = get_response_name(color_by)) +
+        scale_shape_manual(values = c("M" = 24, "F" = 21), name = get_response_name(color_by)) +
+        labs(x = get_response_name(xaxis), y = y_label, title = title) +
         theme(
             panel.grid.major.x = element_blank(),
             panel.grid.minor = element_blank(),
@@ -895,8 +893,7 @@ make_cerv_normalized_plot <- function(
             legend.background = element_rect(fill = "transparent", color = NA),
             legend.key = element_rect(fill = "transparent", color = NA)
         ) +
-        scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
-        scale_color_manual(values = colors_sex)
+        scale_y_continuous(expand = expansion(mult = c(0, 0.1)))
 }
 
 #------------------#

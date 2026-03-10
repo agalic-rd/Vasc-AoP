@@ -13,10 +13,7 @@ distribution_summary <- function(data, dvs, between = "Condition") {
             datawizard::describe_distribution(dplyr::group_by(d, DV), verbose = FALSE) |>
                 dplyr::select(-"Variable") |>
                 dplyr::rename(Variable = "DV") |>
-                dplyr::mutate(
-                    Variance = SD^2,
-                    CoV = ifelse(SD / Mean > 1e4, NA_real_, SD / Mean)
-                ) |>
+                dplyr::mutate(Variance = SD^2, CoV = ifelse(SD / Mean > 1e4, NA_real_, SD / Mean)) |>
                 tibble::add_column(g, .after = 1) |>
                 dplyr::select(
                     "Variable",

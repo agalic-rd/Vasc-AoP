@@ -15,7 +15,7 @@ clearing_responses <- c(
     "endpoints", "number_of_segments"
 )
 
-clearing <- load_clearing_data(reprocess = TRUE, responses = clearing_responses)
+clearing <- load_clearing_data(responses = clearing_responses)
 
 clearing_total <- clearing |> dplyr::filter(level == "Total")
 clearing_ds <- clearing |> dplyr::filter(level != "Total")
