@@ -81,86 +81,68 @@ load_supplementary_data <- function() {
 }
 
 # Loading and shaping Transparization data
-# @reprocess: if TRUE, re-process the raw data, else simply load it from the processed data
-load_clearing_data <- function(path = configs$data$clearing_raw, reprocess = FALSE, responses = NULL) {
-    if (reprocess) {
-        col_names <- (openxlsx2::read_xlsx(path, rows = 1:2, col_names = FALSE, fill_merged_cells = TRUE) |>
-            dplyr::summarize(across(everything(), \(x) {
-                paste(na.omit(x), collapse = "__")
-            })) |>
-            unlist())
+load_clearing_data <- function(path = configs$data$clearing_raw, responses = NULL) {
+    clearing_data <- openxlsx2::read_xlsx(path) |>
+        dplyr::rename_with(stringr::str_to_snake) |>
+        dplyr::filter(!dplyr::if_all(everything(), is.na)) |>
+        dplyr::filter(mouse != "KA4N") |> # Only affetcs P12
+        dplyr::arrange(stage, condition, level, mouse)
 
-        clearing_data <- openxlsx2::read_xlsx(path, start_row = 3, col_names = FALSE) |>
-            dplyr::filter(!dplyr::if_all(everything(), is.na))
-
-        colnames(clearing_data) <- col_names
-
-        if (is.null(responses)) {
-            responses <- c(
-                "volume",
-                "network_length",
-                "surface_area",
-                "segment_partitioning",
-                "mean_segment_radius",
-                "mean_segment_length",
-                "mean_segment_tortuosity",
-                "mean_segment_volume",
-                "mean_segment_surface_area",
-                "branchpoints",
-                "endpoints",
-                "number_of_segments"
-            )
-        }
-
-        clearing_data <- clearing_data |> dplyr::rename_with(stringr::str_to_snake) |> dplyr::select(-contains("_bin_"))
-
-        ## Adding totals (all depths)
-        clearing_data <- (dplyr::bind_rows(
-            clearing_data,
-            clearing_data |>
-                dplyr::summarize(
-                    cerebellar_volume = first(cerebellar_volume),
-                    cerebellar_area = first(cerebellar_area),
-                    across(all_of(responses), sum),
-                    .by = c(stage, mouse, condition)
-                ) |>
-                dplyr::mutate(level = "Total")
-        ) |>
-            dplyr::filter(mouse != "KA4N") |>
-            dplyr::arrange(stage, condition, level, mouse))
-
-        # Unbinned variables
-        clearing_data <- clearing_data |>
-            dplyr::select(-contains("__")) |>
-            dplyr::rename_with(stringr::str_to_snake) |>
-            dplyr::mutate(across(c(condition, stage, level), \(x) {
-                to_factor(x)
-            })) |>
-            tibble::as_tibble()
-
-        # Data checks
-        cerebellar_values_not_equal <- clearing_data |>
-            dplyr::filter(level != "Total") |>
-            tidyr::pivot_wider(names_from = level, values_from = -c(level, stage, condition, mouse)) |>
-            dplyr::filter(
-                cerebellar_volume_Deep != cerebellar_volume_Superficial |
-                    cerebellar_area_Deep != cerebellar_area_Superficial,
-                .by = stage
-            ) |>
-            dplyr::select(stage, mouse, condition, starts_with("cerebellar_volume"), starts_with("cerebellar_area"))
-
-        if (nrow(cerebellar_values_not_equal) > 0) {
-            cli::cli_alert_warning("Cerebellar values are not equal for some mice")
-        }
-
-        res <- clearing_data
-
-        saveRDS(res, configs$data$clearing_processed)
-    } else {
-        res <- readRDS(configs$data$clearing_processed)
+    if (is.null(responses)) {
+        # Default responses
+        responses <- c(
+            "volume",
+            "network_length",
+            "surface_area",
+            "segment_partitioning",
+            "mean_segment_radius",
+            "mean_segment_length",
+            "mean_segment_tortuosity",
+            "mean_segment_volume",
+            "mean_segment_surface_area",
+            "branchpoints",
+            "endpoints",
+            "number_of_segments"
+        )
     }
 
-    return(res)
+    ## Adding totals (all depths)
+    clearing_data <- (dplyr::bind_rows(
+        clearing_data,
+        clearing_data |>
+            dplyr::summarize(
+                cerebellar_volume = first(cerebellar_volume),
+                cerebellar_area = first(cerebellar_area),
+                across(all_of(responses), sum),
+                .by = c(stage, mouse, condition)
+            ) |>
+            dplyr::mutate(level = "Total")
+    ) |>
+        dplyr::arrange(stage, condition, level, mouse))
+
+    # Unbinned variables
+    clearing_data <- clearing_data |>
+        dplyr::mutate(across(c(condition, stage, level), \(x) {
+            to_factor(x)
+        })) |>
+        tibble::as_tibble()
+
+    # Data checks
+    cerebellar_values_not_equal <- clearing_data |>
+        dplyr::filter(level != "Total") |>
+        tidyr::pivot_wider(names_from = level, values_from = -c(level, stage, condition, mouse)) |>
+        dplyr::filter(
+            cerebellar_volume_Deep != cerebellar_volume_Superficial |
+                cerebellar_area_Deep != cerebellar_area_Superficial,
+            .by = stage
+        ) |>
+        dplyr::select(stage, mouse, condition, starts_with("cerebellar_volume"), starts_with("cerebellar_area"))
+
+    if (nrow(cerebellar_values_not_equal) > 0) {
+        cli::cli_alert_warning("Cerebellar values are not equal for some mice")
+    }
+
+    return(clearing_data)
 }
 
 ## Loading the PCR data
