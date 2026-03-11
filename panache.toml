@@ -1,0 +1,24 @@
+# Markdown flavor and line width
+flavor = "quarto"
+
+# Formatting style
+[style]
+line-width = 120
+line-ending = "auto"
+blank-lines = "collapse" # Blankline handling. Options: "collapse", "preserve"
+wrap = "reflow"
+
+# External code formatters (opt-in)
+[formatters]
+r = "air"
+python = "ruff"
+js = "prettier"
+javascript = "prettier"
+typescript = "prettier"
+
+[formatters.prettier]
+args = ["--parser", "babel"]
+
+# External code linters
+[linters]
+r = "jarl"
