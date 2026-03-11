@@ -903,7 +903,11 @@ make_cerv_normalized_plot <- function(
 make_pca_plot <- function(dat, stage = "P4") {
     filtered_dat <- dat |> dplyr::filter(stage == !!stage & level == "Total")
     data_numeric <- filtered_dat |> dplyr::select(where(is.numeric))
-    group <- filtered_dat |> dplyr::mutate(group = paste0(stage, " ", condition)) |> dplyr::pull(group)
+    group <- filtered_dat |>
+        dplyr::mutate(
+            group = factor(paste0(stage, " ", condition), levels = unique(paste0(stage, " ", levels(condition))))
+        ) |>
+        dplyr::pull(group)
 
     pca_res <- PCA(data_numeric, scale.unit = TRUE, ncp = 4, graph = FALSE)
 
@@ -913,7 +917,7 @@ make_pca_plot <- function(dat, stage = "P4") {
         habillage = group,
         addEllipses = TRUE,
         ellipse.type = "convex",
-        palette = c("blue", "red"),
+        palette = colors_cond,
         col.var = "black",
         labelsize = 3,
         arrow.size = 0.1,
