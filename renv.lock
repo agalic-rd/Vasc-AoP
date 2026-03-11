@@ -6227,14 +6227,6 @@
       "NeedsCompilation": "no",
       "Repository": "https://packagemanager.posit.co/cran/__linux__/jammy/latest"
     },
-    "renv": {
-      "Package": "renv",
-      "Version": "1.1.8",
-      "OS_type": null,
-      "NeedsCompilation": "yes",
-      "Repository": "PPM",
-      "Source": "Repository"
-    },
     "reshape2": {
       "Package": "reshape2",
       "Version": "1.4.5",
