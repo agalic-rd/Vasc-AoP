@@ -4,7 +4,7 @@ source(here::here("src/renv/helpers.R"))
 ## - https://rstudio.github.io/renv/reference/config.html
 ## - https://rstudio.github.io/renv/reference/snapshot.html
 options(
-    repos = c(PPM = "https://packagemanager.posit.co/cran/latest", CRAN = "https://cloud.r-project.org"),
+    repos = c(CRAN = "https://cloud.r-project.org"),
     renv.config.pak.enabled = TRUE,
     renv.config.sandbox.enabled = FALSE,
     renv.config.snapshot.inference = FALSE,
