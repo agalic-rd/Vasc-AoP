@@ -7,10 +7,18 @@
 '%||%' <- function(x, y) if (is.null(x)) y else x
 
 #-------------#
+####🔺here ####
+#-------------#
+
+if (!"here" %in% as.data.frame(installed.packages())$Package) {
+    renv::install("here", prompt = FALSE)
+}
+
+#-------------#
 ####🔺renv ####
 #-------------#
 
-source("src/renv/init.R")
+source(here::here("src/renv/init.R"))
 
 if (should_restore()) {
     safe_restore()

@@ -3,11 +3,13 @@ get_r_version <- function() {
 }
 
 is_installed <- function(pkg) {
-    suppressMessages({require(pkg, quietly = TRUE, warn.conflicts = FALSE, character.only = TRUE)})
+    suppressMessages({
+        require(pkg, quietly = TRUE, warn.conflicts = FALSE, character.only = TRUE)
+    })
 }
 
-read_packages <- function(packages_file = "packages.txt") {    
-    packages <- readLines(packages_file)
+read_packages <- function(packages_file = "packages.txt") {
+    packages <- readLines(here::here(packages_file))
     packages <- trimws(packages)
     packages <- packages[packages != ""]
     packages <- gsub(packages, pattern = ",", replacement = "")
@@ -20,13 +22,17 @@ get_pkg_name <- function(remotes_string) {
 }
 
 should_restore <- function(packages_file = "packages.txt") {
-    void_ <- capture.output({status <- renv::status()})
+    void_ <- capture.output({
+        status <- renv::status()
+    })
     packages_installed <- names(status$library$Packages)
 
     packages_needed <- read_packages(packages_file)
     packages_needed <- sapply(packages_needed, get_pkg_name)
 
-    if (length(setdiff(packages_needed, packages_installed)) > 0) return(TRUE)
+    if (length(setdiff(packages_needed, packages_installed)) > 0) {
+        return(TRUE)
+    }
 
     return(FALSE)
 }
@@ -51,8 +57,9 @@ load_all_packages <- function(packages_file = "packages.txt") {
     packages <- read_packages(packages_file)
     package_names <- sapply(packages, get_pkg_name)
 
-    void_ <- lapply(
-        package_names,
-        \(pkg_name) suppressPackageStartupMessages({library(pkg_name, character.only = TRUE)})
-    )
+    void_ <- lapply(package_names, \(pkg_name) {
+        suppressPackageStartupMessages({
+            library(pkg_name, character.only = TRUE)
+        })
+    })
 }
