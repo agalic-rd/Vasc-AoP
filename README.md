@@ -12,7 +12,7 @@
 
 ## ❔ Requirements
 
-* R version 4.3 or newer
+* R version 4.5 or newer
 
 ## 💻 Repository structure
 
