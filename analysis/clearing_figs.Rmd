@@ -157,440 +157,265 @@ purrr::walk(
 # III. Supplementary
 
 <!----------------------------------------------------------------------------->
-## Figure 1: Total network (volume, length, area)
+## Figure 1: Total network (volume, length, surface area)
 
 ```{r}
-tot_vol <- make_signif_boxplot(mod_vol_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4)
-tot_length <- make_signif_boxplot(mod_length_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4)
-tot_area <- make_signif_boxplot(mod_area_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4)
+tot_vol <- make_signif_boxplot(mod_vol_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4, only_signif = FALSE)
+tot_length <- make_signif_boxplot(
+    mod_length_gamma_tot,
+    xaxis = "condition",
+    facet = "stage",
+    ncol = 4,
+    only_signif = FALSE
+)
+tot_area <- make_signif_boxplot(mod_area_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4, only_signif = FALSE)
 ```
 
 ```{r}
 #| fig-height: 17
 #| fig-width: 14
 (tot_vol / (tot_length + no_strip) / (tot_area + no_strip) + plot_layout(axes = "collect")) |>
-    save_png("Fig1", subfolder = "IHC", width = 14, height = 17)
+    save_png("Fig1", subfolder = "IHC/supplementary", width = 14, height = 17)
 ```
 
 <!----------------------------------------------------------------------------->
-## Figure 2: Total network (topology & shape)
+## Figure 2: DS network (volume, length, surface area)
 
 ```{r}
-tot_numseg <- make_signif_boxplot(mod_numseg_nbinom_tot, xaxis = "condition", facet = "stage", ncol = 4)
-tot_numbranch <- make_signif_boxplot(mod_numbranch_nbinom_tot, xaxis = "condition", facet = "stage", ncol = 4)
-tot_numends <- make_signif_boxplot(mod_numends_nbinom_tot, xaxis = "condition", facet = "stage", ncol = 4)
-tot_seg_part <- make_signif_boxplot(mod_seg_part_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4)
-tot_seg_tort <- make_signif_boxplot(mod_seg_tort_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4)
-```
-
-```{r}
-#| fig-height: 20
-#| fig-width: 14
-(tot_numseg /
-    (tot_numbranch + no_strip) /
-    (tot_numends + no_strip) /
-    (tot_seg_part + no_strip) /
-    (tot_seg_tort + no_strip) +
-    plot_layout(axes = "collect")) |>
-    save_png("Fig2", subfolder = "IHC", width = 14, height = 20)
-```
-
-<!----------------------------------------------------------------------------->
-## Figure 3: Total segment averages
-
-```{r}
-tot_seg_vol <- make_signif_boxplot(mod_seg_vol_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4)
-tot_seg_area <- make_signif_boxplot(mod_seg_area_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4)
-tot_seg_length <- make_signif_boxplot(mod_seg_length_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4)
-tot_seg_rad <- make_signif_boxplot(mod_seg_rad_gamma_tot, xaxis = "condition", facet = "stage", ncol = 4)
-```
-
-```{r}
-#| fig-height: 20
-#| fig-width: 14
-(tot_seg_vol /
-    (tot_seg_area + no_strip) /
-    (tot_seg_length + no_strip) /
-    (tot_seg_rad + no_strip) +
-    plot_layout(axes = "collect")) |>
-    save_png("Fig3", subfolder = "IHC", width = 14, height = 20)
-```
-
-<!----------------------------------------------------------------------------->
-## Figure 4
-
-```{r}
-ds_vol <- make_signif_boxplot_inter(mod_vol_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4)
+ds_vol <- make_signif_boxplot_inter(
+    mod_vol_gamma_ds,
+    pred1 = "condition",
+    pred2 = "level",
+    facet = "stage",
+    ncol = 4,
+    only_signif = FALSE
+)
 ds_length <- make_signif_boxplot_inter(
     mod_length_gamma_ds,
     pred1 = "condition",
     pred2 = "level",
     facet = "stage",
-    ncol = 4
+    ncol = 4,
+    only_signif = FALSE
 )
-ds_numbranch <- make_signif_boxplot_inter(
-    mod_numbranch_nbinom_ds,
+ds_area <- make_signif_boxplot_inter(
+    mod_area_gamma_ds,
     pred1 = "condition",
     pred2 = "level",
     facet = "stage",
-    ncol = 4
+    ncol = 4,
+    only_signif = FALSE
 )
-ds_seg_tort <- make_signif_boxplot_inter(
-    mod_seg_tort_gamma_ds,
-    pred1 = "condition",
-    pred2 = "level",
-    facet = "stage",
-    ncol = 4
-)
-ds_seg_part <- make_signif_boxplot_inter(
-    mod_seg_part_gamma_ds,
-    pred1 = "condition",
-    pred2 = "level",
-    facet = "stage",
-    ncol = 4
-)
-ds_seg_vol <- make_signif_boxplot_inter(
-    mod_seg_vol_gamma_ds,
-    pred1 = "condition",
-    pred2 = "level",
-    facet = "stage",
-    ncol = 4
-)
-ds_seg_area <- make_signif_boxplot_inter(
-    mod_seg_area_gamma_ds,
-    pred1 = "condition",
-    pred2 = "level",
-    facet = "stage",
-    ncol = 4
-)
-```
-
-```{r}
-#| fig-height: 28
-#| fig-width: 17
-(ds_vol /
-    (ds_length + no_strip) /
-    (ds_numbranch + no_strip) /
-    (ds_seg_tort + no_strip) /
-    (ds_seg_part + no_strip) /
-    (ds_seg_vol + no_strip) /
-    (ds_seg_area + no_strip) +
-    plot_layout(axes = "collect")) |>
-    save_png("Fig4", subfolder = "IHC", width = 17, height = 28)
-```
-
-<!----------------------------------------------------------------------------->
-## Figure 5
-
-```{r}
-ds_area <- make_signif_boxplot_inter(mod_area_gamma_ds, pred1 = "condition", pred2 = "level", facet = "stage", ncol = 4)
 ```
 
 ```{r}
 #| fig-height: 20
 #| fig-width: 18
 (ds_vol / (ds_length + no_strip) / (ds_area + no_strip) + plot_layout(axes = "collect")) |>
-    save_png("Fig5", subfolder = "IHC", width = 18, height = 20)
+    save_png("Fig2", subfolder = "IHC/supplementary", width = 18, height = 20)
 ```
 
 <!----------------------------------------------------------------------------->
-## Figure 6
+## Figure 3: Total network (topology)
 
 ```{r}
-ds_numseg <- make_signif_boxplot_inter(
-    mod_numseg_nbinom_ds,
+tot_numbranch <- make_signif_boxplot(
+    mod_numbranch_nbinom_tot,
+    xaxis = "condition",
+    facet = "stage",
+    ncol = 4,
+    only_signif = FALSE
+)
+tot_numends <- make_signif_boxplot(
+    mod_numends_nbinom_tot,
+    xaxis = "condition",
+    facet = "stage",
+    ncol = 4,
+    only_signif = FALSE
+)
+tot_numseg <- make_signif_boxplot(
+    mod_numseg_nbinom_tot,
+    xaxis = "condition",
+    facet = "stage",
+    ncol = 4,
+    only_signif = FALSE
+)
+tot_seg_part <- make_signif_boxplot(
+    mod_seg_part_gamma_tot,
+    xaxis = "condition",
+    facet = "stage",
+    ncol = 4,
+    only_signif = FALSE
+)
+```
+
+```{r}
+#| fig-height: 20
+#| fig-width: 14
+(tot_numbranch /
+    (tot_numends + no_strip) /
+    (tot_numseg + no_strip) /
+    (tot_seg_part + no_strip) +
+    plot_layout(axes = "collect")) |>
+    save_png("Fig3", subfolder = "IHC/supplementary", width = 14, height = 20)
+```
+
+<!----------------------------------------------------------------------------->
+## Figure 4: DS network (topology)
+
+```{r}
+ds_numbranch <- make_signif_boxplot_inter(
+    mod_numbranch_nbinom_ds,
     pred1 = "condition",
     pred2 = "level",
     facet = "stage",
-    ncol = 4
+    ncol = 4,
+    only_signif = FALSE
 )
 ds_numends <- make_signif_boxplot_inter(
     mod_numends_nbinom_ds,
     pred1 = "condition",
     pred2 = "level",
     facet = "stage",
-    ncol = 4
+    ncol = 4,
+    only_signif = FALSE
+)
+ds_numseg <- make_signif_boxplot_inter(
+    mod_numseg_nbinom_ds,
+    pred1 = "condition",
+    pred2 = "level",
+    facet = "stage",
+    ncol = 4,
+    only_signif = FALSE
+)
+ds_seg_part <- make_signif_boxplot_inter(
+    mod_seg_part_gamma_ds,
+    pred1 = "condition",
+    pred2 = "level",
+    facet = "stage",
+    ncol = 4,
+    only_signif = FALSE
 )
 ```
 
 ```{r}
 #| fig-height: 25
 #| fig-width: 18
-(ds_numseg /
-    (ds_numbranch + no_strip) /
+(ds_numbranch /
     (ds_numends + no_strip) /
-    (ds_seg_part + no_strip) /
-    (ds_seg_tort + no_strip) +
+    (ds_numseg + no_strip) /
+    (ds_seg_part + no_strip) +
     plot_layout(axes = "collect")) |>
-    save_png("Fig6", subfolder = "IHC", width = 18, height = 25)
+    save_png("Fig4", subfolder = "IHC/supplementary", width = 18, height = 25)
 ```
 
 <!----------------------------------------------------------------------------->
-## Figure 7
+## Figure 5: Total segment averages
 
 ```{r}
-ds_seg_length <- make_signif_boxplot_inter(
-    mod_seg_length_gamma_ds,
-    pred1 = "condition",
-    pred2 = "level",
+tot_seg_rad <- make_signif_boxplot(
+    mod_seg_rad_gamma_tot,
+    xaxis = "condition",
     facet = "stage",
-    ncol = 4
+    ncol = 4,
+    only_signif = FALSE
 )
+tot_seg_length <- make_signif_boxplot(
+    mod_seg_length_gamma_tot,
+    xaxis = "condition",
+    facet = "stage",
+    ncol = 4,
+    only_signif = FALSE
+)
+tot_seg_tort <- make_signif_boxplot(
+    mod_seg_tort_gamma_tot,
+    xaxis = "condition",
+    facet = "stage",
+    ncol = 4,
+    only_signif = FALSE
+)
+tot_seg_vol <- make_signif_boxplot(
+    mod_seg_vol_gamma_tot,
+    xaxis = "condition",
+    facet = "stage",
+    ncol = 4,
+    only_signif = FALSE
+)
+tot_seg_area <- make_signif_boxplot(
+    mod_seg_area_gamma_tot,
+    xaxis = "condition",
+    facet = "stage",
+    ncol = 4,
+    only_signif = FALSE
+)
+```
+
+```{r}
+#| fig-height: 25
+#| fig-width: 14
+(tot_seg_rad /
+    (tot_seg_length + no_strip) /
+    (tot_seg_tort + no_strip) /
+    (tot_seg_vol + no_strip) /
+    (tot_seg_area + no_strip) +
+    plot_layout(axes = "collect")) |>
+    save_png("Fig5", subfolder = "IHC/supplementary", width = 14, height = 25)
+```
+
+<!----------------------------------------------------------------------------->
+## Figure 6: DS segment averages
+
+```{r}
 ds_seg_rad <- make_signif_boxplot_inter(
     mod_seg_rad_gamma_ds,
     pred1 = "condition",
     pred2 = "level",
     facet = "stage",
-    ncol = 4
+    ncol = 4,
+    only_signif = FALSE
 )
-```
-
-```{r}
-#| fig-height: 22
-#| fig-width: 18
-(ds_seg_vol /
-    (ds_seg_area + no_strip) /
-    (ds_seg_length + no_strip) /
-    (ds_seg_rad + no_strip) +
-    plot_layout(axes = "collect")) |>
-    save_png("Fig7", subfolder = "IHC", width = 18, height = 22)
-```
-
-<!----------------------------------------------------------------------------->
-## Figure 8
-
-```{r}
-ds_vol_P4 <- make_signif_boxplot_inter(
-    mod_vol_gamma_ds,
+ds_seg_length <- make_signif_boxplot_inter(
+    mod_seg_length_gamma_ds,
     pred1 = "condition",
     pred2 = "level",
     facet = "stage",
-    ncol = 1,
-    only_signif = FALSE,
-    only_facets = "P4"
+    ncol = 4,
+    only_signif = FALSE
 )
-
-ds_seg_part_P8 <- make_signif_boxplot_inter(
-    mod_seg_part_gamma_ds,
+ds_seg_tort <- make_signif_boxplot_inter(
+    mod_seg_tort_gamma_ds,
     pred1 = "condition",
     pred2 = "level",
     facet = "stage",
-    ncol = 1,
-    only_signif = FALSE,
-    only_facets = "P8"
+    ncol = 4,
+    only_signif = FALSE
 )
-
-ds_area_P12 <- make_signif_boxplot_inter(
-    mod_area_gamma_ds,
+ds_seg_vol <- make_signif_boxplot_inter(
+    mod_seg_vol_gamma_ds,
     pred1 = "condition",
     pred2 = "level",
     facet = "stage",
-    ncol = 1,
-    only_signif = FALSE,
-    only_facets = "P12"
+    ncol = 4,
+    only_signif = FALSE
 )
-
-ds_numends_P21 <- make_signif_boxplot_inter(
-    mod_numends_nbinom_ds,
+ds_seg_area <- make_signif_boxplot_inter(
+    mod_seg_area_gamma_ds,
     pred1 = "condition",
     pred2 = "level",
     facet = "stage",
-    ncol = 1,
-    only_signif = FALSE,
-    only_facets = "P21"
-)
-
-ds_length_P4 <- make_signif_boxplot_inter(
-    mod_length_gamma_ds,
-    pred1 = "condition",
-    pred2 = "level",
-    facet = "stage",
-    ncol = 1,
-    only_signif = FALSE,
-    only_facets = "P4"
-)
-
-ds_endpoints_P8 <- make_signif_boxplot_inter(
-    mod_numends_nbinom_ds,
-    pred1 = "condition",
-    pred2 = "level",
-    facet = "stage",
-    ncol = 1,
-    only_signif = FALSE,
-    only_facets = "P8"
-)
-
-ds_length_P12 <- make_signif_boxplot_inter(
-    mod_length_gamma_ds,
-    pred1 = "condition",
-    pred2 = "level",
-    facet = "stage",
-    ncol = 1,
-    only_signif = FALSE,
-    only_facets = "P12"
-)
-
-ds_seg_part_P4 <- make_signif_boxplot_inter(
-    mod_seg_part_gamma_ds,
-    pred1 = "condition",
-    pred2 = "level",
-    facet = "stage",
-    ncol = 1,
-    only_signif = FALSE,
-    only_facets = "P4"
-)
-
-ds_seg_part_P12 <- make_signif_boxplot_inter(
-    mod_seg_part_gamma_ds,
-    pred1 = "condition",
-    pred2 = "level",
-    facet = "stage",
-    ncol = 1,
-    only_signif = FALSE,
-    only_facets = "P12"
-)
-
-ds_numbranch_P4 <- make_signif_boxplot_inter(
-    mod_numbranch_nbinom_ds,
-    pred1 = "condition",
-    pred2 = "level",
-    facet = "stage",
-    ncol = 1,
-    only_signif = FALSE,
-    only_facets = "P4"
-)
-
-ds_numseg_P4 <- make_signif_boxplot_inter(
-    mod_numseg_nbinom_ds,
-    pred1 = "condition",
-    pred2 = "level",
-    facet = "stage",
-    ncol = 1,
-    only_signif = FALSE,
-    only_facets = "P4"
+    ncol = 4,
+    only_signif = FALSE
 )
 ```
 
 ```{r}
 #| fig-height: 30
-#| fig-width: 20
-layout <- "
-ABCD
-EGH#
-I#J#
-K###
-L###
-"
-
-fig8 <- ds_vol_P4 +
-    ds_seg_part_P8 +
-    ds_area_P12 +
-    ds_numends_P21 +
-    ds_length_P4 +
-    ds_endpoints_P8 +
-    ds_length_P12 +
-    ds_seg_part_P4 +
-    ds_seg_part_P12 +
-    ds_numbranch_P4 +
-    ds_numseg_P4 +
-    plot_layout(design = layout, guides = "collect", axis_titles = "collect", axes = "collect")
-
-save_png(fig8, filename = "Fig8", subfolder = "IHC", width = 20, height = 30)
-```
-
-<!----------------------------------------------------------------------------->
-## Figure 9
-
-```{r}
-ds_seg_length_P4 <- make_signif_boxplot_inter(
-    mod_seg_length_gamma_ds,
-    pred1 = "condition",
-    pred2 = "level",
-    facet = "stage",
-    ncol = 1,
-    only_signif = FALSE,
-    only_facets = "P4"
-)
-
-ds_seg_length_P8 <- make_signif_boxplot_inter(
-    mod_seg_length_gamma_ds,
-    pred1 = "condition",
-    pred2 = "level",
-    facet = "stage",
-    ncol = 1,
-    only_signif = FALSE,
-    only_facets = "P8"
-)
-
-ds_seg_area_P4 <- make_signif_boxplot_inter(
-    mod_seg_area_gamma_ds,
-    pred1 = "condition",
-    pred2 = "level",
-    facet = "stage",
-    ncol = 1,
-    only_signif = FALSE,
-    only_facets = "P4"
-)
-
-ds_seg_area_P8 <- make_signif_boxplot_inter(
-    mod_seg_area_gamma_ds,
-    pred1 = "condition",
-    pred2 = "level",
-    facet = "stage",
-    ncol = 1,
-    only_signif = FALSE,
-    only_facets = "P8"
-)
-
-ds_seg_rad_P4 <- make_signif_boxplot_inter(
-    mod_seg_rad_gamma_ds,
-    pred1 = "condition",
-    pred2 = "level",
-    facet = "stage",
-    ncol = 1,
-    only_signif = FALSE,
-    only_facets = "P4"
-)
-
-ds_seg_tort_P4 <- make_signif_boxplot_inter(
-    mod_seg_tort_gamma_ds,
-    pred1 = "condition",
-    pred2 = "level",
-    facet = "stage",
-    ncol = 1,
-    only_signif = FALSE,
-    only_facets = "P4"
-)
-
-ds_seg_tort_P21 <- make_signif_boxplot_inter(
-    mod_seg_tort_gamma_ds,
-    pred1 = "condition",
-    pred2 = "level",
-    facet = "stage",
-    ncol = 1,
-    only_signif = FALSE,
-    only_facets = "P21"
-)
-```
-
-```{r}
-#| fig-height: 24
-#| fig-width: 15
-layout <- "
-ABC
-DE#
-G##
-H##
-"
-
-fig9 <- ds_seg_length_P4 +
-    ds_seg_length_P8 +
-    ds_seg_tort_P21 +
-    ds_seg_area_P4 +
-    ds_seg_area_P8 +
-    ds_seg_rad_P4 +
-    ds_seg_tort_P4 +
-    plot_layout(design = layout, guides = "collect", axis_titles = "collect", axes = "collect")
-
-save_png(fig9, filename = "Fig9", subfolder = "IHC", width = 15, height = 24)
+#| fig-width: 18
+(ds_seg_rad /
+    (ds_seg_length + no_strip) /
+    (ds_seg_tort + no_strip) /
+    (ds_seg_vol + no_strip) /
+    (ds_seg_area + no_strip) +
+    plot_layout(axes = "collect")) |>
+    save_png("Fig6", subfolder = "IHC/supplementary", width = 18, height = 30)
 ```

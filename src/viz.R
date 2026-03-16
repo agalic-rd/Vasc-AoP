@@ -54,7 +54,8 @@ make_signif_boxplot <- function(
     method = "pairwise",
     resp_name = NULL,
     ncol = 2,
-    only_facets = NULL
+    only_facets = NULL,
+    only_signif = TRUE
 ) {
     get_n_units <- function(df) {
         if (!is.null(cluster) && cluster %in% colnames(df)) {
@@ -150,8 +151,11 @@ make_signif_boxplot <- function(
         ) |>
         dplyr::arrange(x.diff := abs(x2 - x1)) |>
         dplyr::mutate(step = 1:n(), pos.x = (x2 + x1) * 0.5, pos.y = max + step * 0.1 * (max - min)) |>
-        dplyr::ungroup() |>
-        dplyr::filter(p.signif <= .05))
+        dplyr::ungroup())
+
+    if (only_signif) {
+        p_data_contrasts <- p_data_contrasts |> dplyr::filter(p.signif <= .05)
+    }
     # -----------[ Plot ]----------- #
 
     plot <- (ggplot(dat, aes(x = .data[[xaxis]], y = .data[[resp]], color = .data[[xaxis]], fill = .data[[xaxis]])) +
