@@ -2,10 +2,10 @@
 flavor = "quarto"
 
 # Formatting style
-[style]
+[format]
 line-width = 120
 line-ending = "auto"
-blank-lines = "collapse" # Blankline handling. Options: "collapse", "preserve"
+blank-lines = "collapse"  # Blankline handling. Options: "collapse", "preserve"
 wrap = "reflow"
 
 # External code formatters (opt-in)
@@ -18,6 +18,9 @@ typescript = "prettier"
 
 [formatters.prettier]
 args = ["--parser", "babel"]
+
+[lint.rules]
+missing-chunk-labels = false
 
 # External code linters
 [linters]
