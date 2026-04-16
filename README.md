@@ -3,12 +3,12 @@
 <h1>Changes of cerebellar vascularization in a murine model of apnea of prematurity</h1>
  
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-blue.svg)](https://creativecommons.org/licenses/by/4.0/)
-[![DOI](https://zenodo.org/badge/873064553.svg)](https://doi.org/10.5281/zenodo.15319299)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15319299.svg)](https://doi.org/10.5281/zenodo.15319299)
 
 </div>
 
 > **Note**  
-> This repository contains the data and R code for the _"Innovative 3D-image analysis of cerebellar vascularization highlights transcriptomic changes in a murine model of apnea of prematurity."_ paper
+> This repository contains the data and R code for the _"Innovative 3D-image analysis of cerebellar vascularization highlights angiogenic gene dysregulations in a murine model of apnea of prematurity."_ paper
 
 ## ❔ Requirements
 
@@ -28,8 +28,8 @@ This project is licensed under the Creative Commons Attribution 4.0 Internationa
 
 ## 💬 Citation
 
-* **Paper:** _TBA_
-* **Code:** Agalic Rodriguez-Duboc, & Marc-Aurèle Rivière. (2025). agalic-rd/Vasc-AoP: Initial release (v0.1). Zenodo. https://doi.org/10.5281/zenodo.15319299
+* **Paper:** Rodriguez-Duboc, A., Racine, C., Basille-Dugay, M., Vaudry, D., Gonzalez, B., & Burel, D. (2026). Innovative 3D-image analysis of cerebellar vascularization highlights angiogenic gene dysregulations in a murine model of apnea of prematurity. The Cerebellum, 25(3). https://doi.org/10.1101/2025.10.17.683055
+* **Code:** Agalic Rodriguez-Duboc, & Marc-Aurèle Rivière. (2026). agalic-rd/Vasc-AoP: Initial release (v1.0). Zenodo. https://doi.org/10.5281/zenodo.15319299
 
 ## ✨ Contributors
 
