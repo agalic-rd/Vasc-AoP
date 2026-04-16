@@ -7,7 +7,7 @@ title: >-
   agalic-rd/Vasc-AoP: Public release
 abstract: Data & R code associated with the "Innovative 3D-image analysis of cerebellar vascularization highlights angiogenic gene dysregulations in a murine model of apnea of prematurity" paper
 type: software
-license: Creative Commons Attribution 4.0 International
+license: CC-BY-4.0
 version: v1.0
 url: https://doi.org/10.5281/zenodo.15319299
 authors: 
