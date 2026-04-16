@@ -8,7 +8,7 @@
 </div>
 
 > **Note**  
-> This repository contains the data and R code for the _"Innovative 3D-image analysis of cerebellar vascularization highlights angiogenic gene dysregulations in a murine model of apnea of prematurity."_ paper
+> This repository contains the data and R code for the _"Innovative 3D-image analysis of cerebellar vascularization highlights angiogenic gene dysregulations in a murine model of apnea of prematurity"_ paper
 
 ## ❔ Requirements
 
