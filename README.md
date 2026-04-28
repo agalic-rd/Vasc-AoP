@@ -8,7 +8,7 @@
 </div>
 
 > **Note**  
-> This repository contains the data and R code for the _"Innovative 3D-image analysis of cerebellar vascularization highlights angiogenic gene dysregulations in a murine model of apnea of prematurity"_ paper
+> This repository contains the data and R code for the [_"Innovative 3D-image analysis of cerebellar vascularization highlights angiogenic gene dysregulations in a murine model of apnea of prematurity"_](https://link.springer.com/article/10.1007/s12311-026-02006-1) paper
 
 ## ❔ Requirements
 
@@ -28,7 +28,7 @@ This project is licensed under the Creative Commons Attribution 4.0 Internationa
 
 ## 💬 Citation
 
-* **Paper:** Rodriguez-Duboc, A., Racine, C., Basille-Dugay, M., Vaudry, D., Gonzalez, B., & Burel, D. (2026). Innovative 3D-image analysis of cerebellar vascularization highlights angiogenic gene dysregulations in a murine model of apnea of prematurity. The Cerebellum, 25(3). https://doi.org/10.1101/2025.10.17.683055
+* **Paper:** Rodriguez-Duboc, A., Racine, C., Basille-Dugay, M., Vaudry, D., Gonzalez, B., & Burel, D. (2026). Innovative 3D-Image Analysis of Cerebellar Vascularization Highlights Angiogenic Gene Dysregulations in a Murine Model of Apnea of Prematurity. The Cerebellum, 25(3), 62. https://doi.org/10.1007/s12311-026-02006-1
 * **Code:** Agalic Rodriguez-Duboc, & Marc-Aurèle Rivière. (2026). agalic-rd/Vasc-AoP: Public release (v1.0). Zenodo. https://doi.org/10.5281/zenodo.15319299
 
 ## ✨ Contributors
